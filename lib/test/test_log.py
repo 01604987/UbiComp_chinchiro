@@ -1,4 +1,4 @@
-from lib import logging
+import logging
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -10,4 +10,4 @@ class CustomHandler(logging.Handler):
         print("levelname=%(levelname)s name=%(name)s message=%(message)s" % record.__dict__)
 
 logger.addHandler(CustomHandler())
-logger.info("Test")
+#logger.info("Test")
