@@ -1,16 +1,17 @@
 from lib import logging
+from micropython import const
 
 logger = logging.getLogger(__name__)
 
-
+# MENU_STATES
+MENU_S = const(("single","multi"))
+# GAME_STATES
+GAME_S = const(("initial", "shaking", "result", "reset", "change"))
 
 class State:
 
-    MENU_STATES = ["single", "multi"]
-
     # only allow switching menu states in "initial"
     # index is important
-    GAME_STATES = ["initial", "shaking", "result", "reset", "end"]
     
     def __init__(self) -> None:
         self.current_menu_state = None
@@ -19,7 +20,7 @@ class State:
     def set_menu_state(self, state : int) -> None :
         try:
             # cycle through states of the menu
-            if state >= len(State.MENU_STATES):
+            if state >= len(MENU_S):
                 raise(ValueError)
             self.current_menu_state = state
             logger.info(f"Current menu state: {self.current_menu_state}")
@@ -32,13 +33,13 @@ class State:
     def set_game_state(self, state) -> None :
         try:
             if isinstance(state, int):
-                if state >= len(State.GAME_STATES):
+                if state >= len(GAME_S):
                    raise(ValueError)
                 self.current_game_state = state
 
             elif isinstance(state, str):
                 # index() raises ValueError if value not in list
-                self.current_game_state = State.GAME_STATES.index(state)
+                self.current_game_state = GAME_S.index(state)
             else:
                 raise(TypeError)
             

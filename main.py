@@ -1,9 +1,10 @@
 from machine import Pin
-import buttons
-import state_manager
-import logic
-import led_manager
+from buttons import Buttons
+from state_manager import State
+from logic import Logic
+from led_manager import Led
 from lib import logging
+from micropython import const, mem_info
 
 # setup logging
 logging.basicConfig(level=logging.INFO)
@@ -13,19 +14,19 @@ logger = logging.getLogger(__name__)
 print("Hello World")
 
 # some pins do not have irq (interrupt)
-LEFT_BUTTON = 10
-RIGHT_BUTTON = 13
+_L_BTN = const(10)
+_R_BTN = const(13)
 
 # init pins
-left = Pin(LEFT_BUTTON, Pin.IN)
-right = Pin(RIGHT_BUTTON, Pin.IN)
+left = Pin(_L_BTN, Pin.IN)
+right = Pin(_R_BTN, Pin.IN)
 
 
 # init classes
-but = buttons.Buttons(None, left, right)
-state = state_manager.State()
-led = led_manager.Led()
-g = logic.Logic(buttons=but, state_manager = state, led=led)
+
+g = Logic(Buttons(None, left, right), State(), Led())
+#print(free(True))
+gc.collect()
+logger.info(mem_info())
+
 g.start()
-
-

@@ -1,11 +1,14 @@
 from lib import logging
 from machine import Pin, Timer
+from micropython import const
 
 logger = logging.getLogger(__name__)
 
+
+BTNS = const(("left", "right", "top"))
+
 class Buttons:
 
-    buttons = ["left", "right", "top"]
 
     def __init__(self, top_pin, left_button, right_button) -> None:
         # init interrupts
@@ -106,10 +109,10 @@ class Buttons:
 
     def _check_instance(self, button) -> int:
         if isinstance(button, str):
-            return Buttons.buttons.index(button)
+            return BTNS.index(button)
 
         if isinstance(button, int):
-            if button >= len(Buttons.buttons):
+            if button >= len(BTNS):
                 raise ValueError
             return button
         
