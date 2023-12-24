@@ -4,11 +4,9 @@ from micropython import const
 
 logger = logging.getLogger(__name__)
 
-
 _BTNS = const(("left", "right", "top"))
 
 class Buttons:
-
 
     def __init__(self, top_pin, l_btn, r_btn) -> None:
         # init interrupts
@@ -21,12 +19,10 @@ class Buttons:
         self.r_pressed = 0
         self.l_pressed = 0
         self._init_interrupts()
-
-    
+ 
     def _init_interrupts(self):
         self.l_btn.irq(trigger = 0, handler = None)
         self.r_btn.irq(trigger = 0, handler = None)
-
 
     def set_btn_irq(self, button, func, trg = Pin.IRQ_RISING)-> None:
 
@@ -49,9 +45,6 @@ class Buttons:
             #! db_t_active needs to be reset within custom_function
             self.db_t.init(mode = Timer.ONE_SHOT, period = 30, callback = lambda t: func(t))
 
-
-    # TODO maybe dynamic assigned by Logic instead of hardcoded here
-    
     def get_l_pressed(self) -> int:
         if self.l_pressed:
             self.l_pressed = 0
@@ -86,10 +79,6 @@ class Buttons:
             return self.r_btn.value()
         if btn == 2:
             return 0
-    
-
-    
-   
 
     def _check_instance(self, button) -> int:
         if isinstance(button, str):

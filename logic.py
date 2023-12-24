@@ -24,7 +24,6 @@ class Logic:
         self.rst = 0
         self.led = led
 
-
     def start(self):
         while True:
             self._menu_select()
@@ -69,7 +68,6 @@ class Logic:
 
         # led light determined by right button presse counter
 
-
         while True:
             self._initial(self.network)
             self._shaking()
@@ -97,8 +95,6 @@ class Logic:
                 # stop any blinking leds, timers or sound effect that are designed only for initial
                 break
 
-
-
     def _shaking(self):
         raise(NotImplementedError)
     
@@ -112,10 +108,6 @@ class Logic:
         self.network = None
 
 
-
-
-
-
     ##################################################################################################################
     # irq for button presses are defined here
         
@@ -126,14 +118,12 @@ class Logic:
                     
         self.btns.reset_db_t()
 
-
     def _choose_menu(self, t):
         if self.btns.check_btn_val("left"):
             self.btns.l_pressed = 1
             #self.state_manager.set_menu_state(self.r_pressed)
         
         self.btns.reset_db_t()
-
 
     def _set_light(self, t):
         if self.btns.check_btn_val("right"):
