@@ -105,6 +105,7 @@ class Logic:
 
     def _set_light(self, t):
         if self.buttons.check_button_value("right"):
+            #TODO change this to public setter function instead
             self.buttons.right_pressed += 1
             logger.info(f"Setting light to: {self.buttons.get_right_pressed(len(Led.lights))}")
             #self.led.set_light(self.buttons.get_right_pressed(len(Led.lights)))
