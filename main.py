@@ -2,6 +2,7 @@ from machine import Pin
 import buttons
 import state_manager
 import logic
+import led_manager
 from lib import logging
 
 # setup logging
@@ -22,8 +23,9 @@ right = Pin(RIGHT_BUTTON, Pin.IN)
 
 # init classes
 but = buttons.Buttons(None, left, right)
-state = state_manager.StateManager()
-g = logic.Logic(buttons=but, state_manager = state)
+state = state_manager.State()
+led = led_manager.Led()
+g = logic.Logic(buttons=but, state_manager = state, led=led)
 g.start()
 
 
