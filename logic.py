@@ -37,11 +37,15 @@ class Logic:
     def _menu_select(self):
         # on right button press light up different light configs
         # on left button press blink for confirmation
+
+        self.btns.set_btn_irq("right", self._step_menu)
+        self.btns.set_btn_irq("left", self._choose_menu)
+
         while True:
             sleep(0.5)
             # check button menu selection
-            if self.btns.get_left_pressed():
-                self.s_m.set_menu_state(self.btns.get_right_pressed(len(MENU_S)))
+            if self.btns.get_l_pressed():
+                self.s_m.set_menu_state(self.btns.get_r_pressed(len(MENU_S)))
                 break
 
     def _game(self):
@@ -60,8 +64,8 @@ class Logic:
         
         self.s_m.set_game_state("initial")
 
-        self.btns.custom_button_irq("right", self._set_light)
-        self.btns.custom_button_irq("left", self._end_game)
+        self.btns.set_btn_irq("right", self._set_light)
+        self.btns.set_btn_irq("left", self._end_game)
 
         # led light determined by right button presse counter
 
@@ -84,7 +88,7 @@ class Logic:
             if self.rst:
                 raise EndGame
             #logger.info("in initial sleeping")
-            # self.led.set_light(self.btns.get_right_pressed(len(LIGHTS))))
+            # self.led.set_light(self.btns.get_r_pressed(len(LIGHTS))))
             
             # poll distance sensor
             distance = 0
@@ -108,17 +112,41 @@ class Logic:
         self.network = None
 
 
+
+
+
+
+    ##################################################################################################################
+    # irq for button presses are defined here
+        
+    def _step_menu(self, t):
+        if self.btns.check_btn_val("right"):
+            self.btns.r_pressed += 1
+            logger.info(f"Current menu counter: {self.btns.get_r_pressed()}")
+                    
+        self.btns.reset_db_t()
+
+
+    def _choose_menu(self, t):
+        if self.btns.check_btn_val("left"):
+            self.btns.l_pressed = 1
+            #self.state_manager.set_menu_state(self.r_pressed)
+        
+        self.btns.reset_db_t()
+
+
     def _set_light(self, t):
-        if self.btns.check_button_value("right"):
-            self.btns.right_pressed += 1
-            logger.info(f"Setting light to: {self.btns.get_right_pressed(len(LIGHTS))}")
+        if self.btns.check_btn_val("right"):
+            # TODO change this to function set
+            self.btns.r_pressed += 1
+            logger.info(f"Setting light to: {self.btns.get_r_pressed(len(LIGHTS))}")
             gc.collect()
             mem_info()
-            #self.led.set_light(self.btns.get_right_pressed(len(LIGHTS)))
-        self.btns.reset_debounce_timer()
+            #self.led.set_light(self.btns.get_r_pressed(len(LIGHTS)))
+        self.btns.reset_db_t()
 
     def _end_game(self, t):
-        if self.btns.check_button_value("left"):
+        if self.btns.check_btn_val("left"):
             logger.info(f"Ending current game")
             self.rst = 1
-        self.btns.reset_debounce_timer()
+        self.btns.reset_db_t()
