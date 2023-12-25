@@ -15,6 +15,7 @@ class Buttons:
         # debounce timer active
         self.db_t_active = 0
         # debounce timer
+        # TODO check if can use virtual timer -1
         self.db_t = Timer(0)
         self.r_pressed = 0
         self.l_pressed = 0

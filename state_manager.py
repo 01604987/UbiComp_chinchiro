@@ -10,7 +10,6 @@ GAME_S = const(("initial", "shaking", "result", "reset", "change"))
 
 class State:
 
-    # only allow switching menu states in "initial"
     # index is important
     
     def __init__(self) -> None:
