@@ -1,9 +1,11 @@
 from lib import logging
 from state_manager import MENU_S, State
 from led_manager import LIGHTS, Led
+from dfplayermini import Dfplayer
 from buttons import Buttons
 from time import sleep
 from micropython import mem_info
+import random
 import gc
 
 
@@ -14,7 +16,7 @@ class EndGame(Exception):
 
 class Logic:
 
-    def __init__(self, btns:Buttons, s_m:State, led:Led ,network = None, accel = None, vibration = None, audio = None) -> None:
+    def __init__(self, btns:Buttons, s_m:State, led:Led , audio: Dfplayer ,network = None, accel = None, vibration = None) -> None:
         self.btns = btns
         # state_manager
         self.s_m = s_m
@@ -23,6 +25,7 @@ class Logic:
         # reset or game ended trigger
         self.rst = 0
         self.led = led
+        self.audio = audio
 
     def start(self):
         while True:
@@ -63,7 +66,9 @@ class Logic:
         
         self.s_m.set_game_state("initial")
 
-        self.btns.set_btn_irq("right", self._set_light)
+        self.btns.set_btn_irq("right", self._play_sound)
+        self.audio.volume(15)
+        #self.btns.set_btn_irq("right", self._set_light)
         self.btns.set_btn_irq("left", self._end_game)
 
         # led light determined by right button presse counter
@@ -139,4 +144,15 @@ class Logic:
         if self.btns.check_btn_val("left"):
             logger.info(f"Ending current game")
             self.rst = 1
+            self.audio.module_reset()
+        self.btns.reset_db_t()
+
+    def _play_sound(self, t):
+        if self.btns.check_btn_val("right"):
+            gc.collect()
+            mem_info()
+            if random.getrandbits(1):
+                self.audio.play(1)
+            else:
+                self.audio.play(3)
         self.btns.reset_db_t()
