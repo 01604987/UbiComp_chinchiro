@@ -1,7 +1,7 @@
 import gc
 from micropython import mem_info
 from machine import Pin, I2C
-from mpu6050 import accel
+from lib.mpu6050 import accel
 
 
 i = I2C(scl=Pin(5), sda=Pin(4), freq = 10000)
