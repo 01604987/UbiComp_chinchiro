@@ -33,6 +33,7 @@ def do_connect():
 
 do_connect()
 webrepl.start()
-
+# set cpu to 160mhz
+machine.freq(160000000)
 gc.collect()
 
