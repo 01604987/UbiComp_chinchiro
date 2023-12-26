@@ -1,8 +1,6 @@
-from lib import logging
 from machine import Pin, Timer
 from micropython import const
 
-logger = logging.getLogger(__name__)
 
 _BTNS = const(("left", "right", "top"))
 
@@ -30,7 +28,7 @@ class Buttons:
         try:
             btn = self._check_instance(button)
         except ValueError as err:
-            logger.error(f"Invalid button with err code: {str(err)}")
+            print(f"Invalid button with err code: {str(err)}")
 
         if btn == 0:
             self.l_btn.irq(trigger = trg, handler = lambda t: self._debounce(t, func))
@@ -41,7 +39,7 @@ class Buttons:
 
     def _debounce(self, t, func) -> None:
         if not self.db_t_active:
-            logger.info(f"starting debouncing")
+            print(f"starting debouncing")
             self.db_t_active = 1
             #! db_t_active needs to be reset within custom_function
             self.db_t.init(mode = Timer.ONE_SHOT, period = 30, callback = lambda t: func(t))
@@ -72,7 +70,7 @@ class Buttons:
         try:
             btn = self._check_instance(button)
         except ValueError as err:
-            logger.error(f"invalid button")
+            print(f"invalid button")
         
         if btn == 0:
             return self.l_btn.value()

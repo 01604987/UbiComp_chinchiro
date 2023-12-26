@@ -5,12 +5,9 @@ from logic import Logic
 from led_manager import Led
 from lib.dfplayermini import Dfplayer
 from audio import Audio
-from lib import logging
 from micropython import const, mem_info
 
 # setup logging
-logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
 
 # Main will be running after successful boot.
 print("Hello World")
@@ -38,6 +35,6 @@ right = Pin(_R_BTN, Pin.IN)
 g = Logic(Buttons(None, left, right), State(), Led(), Audio(Dfplayer(_UART_0), Dfplayer(_UART_1)))
 #print(free(True))
 gc.collect()
-logger.info(mem_info())
+mem_info()
 
 g.start()

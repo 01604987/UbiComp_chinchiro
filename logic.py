@@ -1,4 +1,3 @@
-from lib import logging
 from state_manager import MENU_S, State
 from led_manager import LIGHTS, Led
 from audio import Audio
@@ -8,8 +7,6 @@ from micropython import mem_info
 import random
 import gc
 
-
-logger = logging.getLogger(__name__)
 
 class EndGame(Exception):
     pass
@@ -91,7 +88,7 @@ class Logic:
             sleep(0.5)
             if self.rst:
                 raise EndGame
-            #logger.info("in initial sleeping")
+            #print("in initial sleeping")
             # self.led.set_light(self.btns.get_r_pressed(len(LIGHTS))))
             
             # poll distance sensor
@@ -120,7 +117,7 @@ class Logic:
     def _step_menu(self, t):
         if self.btns.check_btn_val("right"):
             self.btns.r_pressed += 1
-            logger.info(f"Current menu counter: {self.btns.get_r_pressed()}")
+            print(f"Current menu counter: {self.btns.get_r_pressed()}")
                     
         self.btns.reset_db_t()
 
@@ -135,7 +132,7 @@ class Logic:
         if self.btns.check_btn_val("right"):
             # TODO change this to function set
             self.btns.r_pressed += 1
-            logger.info(f"Setting light to: {self.btns.get_r_pressed(len(LIGHTS))}")
+            print(f"Setting light to: {self.btns.get_r_pressed(len(LIGHTS))}")
             gc.collect()
             mem_info()
             #self.led.set_light(self.btns.get_r_pressed(len(LIGHTS)))
@@ -143,7 +140,7 @@ class Logic:
 
     def _end_game(self, t):
         if self.btns.check_btn_val("left"):
-            logger.info(f"Ending current game")
+            print(f"Ending current game")
             self.rst = 1
             self.audio.player1.module_reset()
             self.audio.player2.module_reset()

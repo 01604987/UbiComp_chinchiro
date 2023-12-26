@@ -1,8 +1,7 @@
-from lib import logging
 from micropython import const
 
-logger = logging.getLogger(__name__)
 
+# TODO maybe use int instead of str
 # MENU_STATES
 MENU_S = const(("single","multi"))
 # GAME_STATES
@@ -23,13 +22,14 @@ class State:
             if state >= len(MENU_S):
                 raise(ValueError)
             self.curr_menu_state = state
-            logger.info(f"Current menu state: {self.curr_menu_state}")
+            print(f"Current menu state: {self.curr_menu_state}")
         except ValueError as err:
-            logger.error(str(err))
+            print(str(err))
     
     def get_menu_state(self) -> int:
         return self.curr_menu_state
     
+    # TODO reduce by only allowing int as state
     def set_game_state(self, state) -> None :
         try:
             if isinstance(state, int):
@@ -44,10 +44,11 @@ class State:
                 raise(TypeError)
             
         except ValueError as err:
-            logger.error(f"invalid state value: {state} with err code: {str(err)}")
+            print(f"invalid state value: {state} with err code: {str(err)}")
         except TypeError as err:
-            logger.error(f"invalid state: {state}. Should be int or str. ErrorCode: {str(err)}")
+            print(f"invalid state: {state}. Should be int or str. ErrorCode: {str(err)}")
             
+    # TODO maybe discard getter and setter and instead use direct vairable access
     def get_game_state(self) -> int:
         return self.curr_menu_state
         
