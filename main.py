@@ -14,7 +14,7 @@ print("Hello World")
 
 # some pins do not have irq (interrupt)
 _L_BTN = const(10)
-_R_BTN = const(13)
+_R_BTN = const(15)
 
 # UART(0) is used by REPL by default. Need to unbind first with os.dupterm(None, 1).
 # Once unbound usb REPL will not work thus webREPL will be used.
