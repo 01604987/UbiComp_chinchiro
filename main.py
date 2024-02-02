@@ -3,8 +3,8 @@ from buttons import Buttons
 from state_manager import State
 from logic import Logic
 from led_manager import Led
-from lib.dfplayermini import Dfplayer
 from audio import Audio
+from shake import Shake
 from micropython import const, mem_info
 
 # setup logging
@@ -25,14 +25,41 @@ _UART_0 = const(0)
 # tx pin of UART(1) is at D4/Pin 2
 _UART_1 = const(1)
 
-# init pins
-left = Pin(_L_BTN, Pin.IN)
-right = Pin(_R_BTN, Pin.IN)
+# In order to use USB repl for debugging after webrepl has been disabled, maybe a button or menu select can be used to reactivate os.dupterm
+
+# init button pins
+left_btn = Pin(_L_BTN, Pin.IN)
+right_btn = Pin(_R_BTN, Pin.IN)
+
+
+# init mpu6050 pins
+scl = Pin(12)
+sda = Pin(13)
 
 
 # init classes
 
-g = Logic(Buttons(None, left, right), State(), Led(), Audio(Dfplayer(_UART_0), Dfplayer(_UART_1)))
+buttons = Buttons(None, left_btn, right_btn)
+state = State()
+led = Led()
+# _UART_1 first because this address is not bound to USB repl and can safely be used. When reenable repl, can simply leave out second param.
+audio = Audio(_UART_1, _UART_0)
+shake = Shake(scl, sda, 100000)
+
+g = Logic(buttons, state, led, audio, None, shake)
+
+
+#dereference to safe a bit of mem
+left_btn = None
+right_btn = None
+scl = None
+sda = None
+buttons = None
+state = None
+audio = None
+shake = None
+
+#g = Logic(Buttons(None, left_btn, right_btn), State(), Led(), Audio(Dfplayer(_UART_0), Dfplayer(_UART_1)))
 #print(free(True))
 gc.collect()
 mem_info()

@@ -2,6 +2,7 @@ from state_manager import MENU_S, State
 from led_manager import LIGHTS, Led
 from audio import Audio
 from buttons import Buttons
+from shake import Shake
 from time import sleep
 from micropython import mem_info
 import random
@@ -13,7 +14,7 @@ class EndGame(Exception):
 
 class Logic:
 
-    def __init__(self, btns:Buttons, s_m:State, led:Led , audio: Audio ,network = None, accel = None, vibration = None) -> None:
+    def __init__(self, btns:Buttons, s_m:State, led:Led , audio: Audio ,network = None, shake: Shake = None, vibration = None) -> None:
         self.btns = btns
         # state_manager
         self.s_m = s_m
@@ -23,6 +24,7 @@ class Logic:
         self.rst = 0
         self.led = led
         self.audio = audio
+        self.shake = shake
 
     def start(self):
         while True:
@@ -100,102 +102,60 @@ class Logic:
 
     def _shaking(self):
         
-        from lib.mpu6050 import accel
-        from machine import I2C, Pin
-        import time
 
-        i = I2C(scl=Pin(12), sda=Pin(13), freq = 100000)
-        print(i)
-        a = accel(i)
-        mem_info()
-
-        default_interval = 10000
-
-        # [[current val, last val, interval, max val], ...]
-        values = [[0,0,default_interval, 0],[0,0,default_interval, 0],[0,0,default_interval, 0]]
-        max_set = 0
-        def acc(accel, values):
-            raw = accel.get_values()
-            axis = [0,0,0]
-            axis[0] = raw['AcX']
-            axis[1] = raw['AcY']
-            axis[2] = raw['AcZ'] - 19000
-            
-            for index, val in enumerate(values):
-                
-                #if abs(axis[index]) > 500:            
-                    # copy current value to last value
-                    val[1] = val[0]
-                    # update current value with new value
-                    val[0] = axis[index]
-                
-        def calculate_interval(axis ,values, default_interval):
-            if axis == None:
-                for val in values:
-                    val[2] = default_interval
-                    #print("resetting interval for all")
-                return
-            
-            for index, val in enumerate(values):
-                if index == axis:
-                    continue
-                val[2] = abs(values[axis][0]) + default_interval
-
-        # return x, y, z or no axis
-        def detect_axis(values, default_interval):
-            for index, val in enumerate(values):
-                # value smaller than interval
-                if abs(val[0]) < val[2]:
-                    continue
-                else:
-                    return index
-            return None
-
-        def max_val(values, axis):
-            if axis == None:
-                return
-            
-            if abs(values[axis][3]) < abs(values[axis][0]):
-                values[axis][3] = values[axis][0]
-
-        counter = 0
         while True:
             # poll accel values
-            acc(a, values)
+            self.shake.update()
             # detect axis being shaken
-            axis = detect_axis(values, default_interval)
-            # recalculate interval for other axis
-            calculate_interval(axis, values, default_interval)
-            max_val(values, axis)
-            #max_set = max_val(values, axis)
-            #print(values[2])
-            #continue
-            #print(values[1])
-            #print(axis)
-            if axis == None:
-                #print(values)
-                continue
+            axis = self.shake.get_axis()
             
-            #print(values[0])
+            if axis == None:
+                # no shaking or undefined axis
+                continue
+
+            # faster skip on no shake 
+            if abs(self.shake.values[axis][0]) >= abs(self.shake.values[axis][3]):
+                continue 
+
+
+            #! detect micro shake
+            # micro shake has max audio volume cap because values very high
+
+            #! shake detection on sign change
             try:
-                if values[axis][3] / values[axis][1] <= 0:
-                    print(axis)
-                    print(values)
-                    values[axis][3] = 0
-                    if values[axis][0] <= 0:
-                        self.audio.play(0)
-                    else:
-                        self.audio.play(1)
-                    time.sleep(0.01)
-                    continue
+                # max value divided by last value = negative => sign changed == shake detected
+                sign_inverse = self.shake.values[axis][3] / self.shake.values[axis][1]
             except ZeroDivisionError as err:
                 continue
                 
-            if values[axis][1] > 0 and values[axis][0] > 0:
-                continue
-            if values[axis][1] < 0 and values[axis][0] < 0:
-                continue
-        
+            try:
+                if sign_inverse <= 0:
+                    # reset max value
+                    self.shake.values[axis][3] = 0
+
+                    #! calculate magnitude
+
+                    #! set audio volume
+                    
+                    #! change led dice
+
+                    # play the correct audio with correct audio channel
+                    # left, right, up, down based on axis.
+                    # if axis == 0 and values[0][0] <= 0 -> left
+                    # axis == 1 ? -> diagonal or left, right, up, down
+
+                    #! play audio
+                    if self.shake.values[axis][0] <= 0:
+                        self.audio.play(0)
+                    else:
+                        self.audio.play(1)
+                    #! start vibration
+                        
+                    #! send udp package                        
+            
+            except Exception as err:
+                print(f"Exception during shaking with err code {str(err)}")
+
     
     def _end(self):
         raise(NotImplementedError)
