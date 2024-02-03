@@ -66,8 +66,8 @@ class Logic:
         self.s_m.set_game_state("initial")
 
         self.btns.set_btn_irq("right", self._play_sound)
-        self.audio.player1.volume(20)
-        self.audio.player2.volume(20)
+        self.audio.player_0.volume(20)
+        self.audio.player_1.volume(20)
         #self.btns.set_btn_irq("right", self._set_light)
         self.btns.set_btn_irq("left", self._end_game)
 
@@ -104,6 +104,8 @@ class Logic:
         
 
         while True:
+            if self.rst:
+                raise EndGame
             # poll accel values
             self.shake.update()
             # detect axis being shaken
@@ -165,6 +167,11 @@ class Logic:
         self.s_m.reset_state()
         self.rst = 0
         self.network = None
+        self.shake.reset_values()
+        self.audio.player_0.module_reset()
+        self.audio.player_1.module_reset()
+        self.btns.reset_db_t()
+
 
 
     ##################################################################################################################
@@ -198,9 +205,9 @@ class Logic:
         if self.btns.check_btn_val("left"):
             print(f"Ending current game")
             self.rst = 1
-            self.audio.player1.module_reset()
-            self.audio.player2.module_reset()
-        self.btns.reset_db_t()
+            #self.audio.player_0.module_reset()
+            #self.audio.player_1.module_reset()
+        #self.btns.reset_db_t()
 
     def _play_sound(self, t):
         if self.btns.check_btn_val("right"):
