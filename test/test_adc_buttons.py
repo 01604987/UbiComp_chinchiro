@@ -1,5 +1,6 @@
 from machine import Pin, ADC, Timer
 import time
+from micropython import const
 
 
 # This implementation allows the use of the ESP 8266 ADC pin to detect button presses.
@@ -10,6 +11,11 @@ import time
 
 buttons = ADC(0)
 
+_r_min = 100
+_r_max = 110
+
+_l_min = 188
+_l_max = 198
 
 r_pressed = 0
 l_pressed= 0
@@ -31,7 +37,9 @@ def r_press(t) -> None:
     global buttons
     global r_pressed
     global hold
-    if buttons.read() <= 130 and buttons.read()>=100:
+    global _r_min
+    global _r_max
+    if buttons.read() <= _r_max and buttons.read()>= _r_min:
         r_pressed = 1
         hold = 1
     reset_db_t()
@@ -41,7 +49,9 @@ def l_press(t) -> None:
     global buttons
     global l_pressed
     global hold
-    if buttons.read() <= 190 and buttons.read() >= 170:
+    global _l_min
+    global _l_max
+    if buttons.read() <= _l_max and buttons.read() >= _l_min:
         l_pressed = 1
         hold = 1
     reset_db_t()
@@ -59,11 +69,11 @@ while True:
     
     
     
-    if val <= 190 and val >=170 :
+    if val <= _l_max and val >= _l_min :
         if not hold:
             _debounce(l_press)
         
-    if val <= 130 and val >= 100:
+    if val <= _r_max and val >= _r_min:
         if not hold:
             _debounce(r_press)
         #print(r_pressed)
