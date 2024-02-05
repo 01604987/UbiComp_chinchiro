@@ -11,9 +11,12 @@ from micropython import const
 
 buttons = ADC(0)
 
+
+# 1k ohm ~ 96 ADC
 _r_min = 92
 _r_max = 102
 
+# 2k ohm ~ 180 ADC
 _l_min = 174
 _l_max = 184
 
