@@ -144,6 +144,18 @@ class Buttons_ADC:
         
         raise ValueError
 
+    def check_btn_val(self, button):
+        try:
+            btn = self._check_instance(button)
+        except ValueError as err:
+            print(f"invalid button")
+        
+        if btn == 0:
+            return self.buttons.read() >= self.l_btn[0] and self.buttons.read() <= self.l_btn[1]
+        if btn == 1:
+            return self.buttons.read() >= self.r_btn[0] and self.buttons.read() <= self.r_btn[1]
+        if btn == 2:
+            return 0
 
     def poll_adc(self) -> None:
         val = self.buttons.read()
@@ -182,14 +194,14 @@ class Buttons_ADC:
 # default button interrupts
         
     def r_press(self, t) -> None:
-        if self.btns.buttons.read() >= self.btns.r_btn[0] and self.btns.buttons.read() <= self.btns.r_btn[1]:
+        if self.btns.check_btn_val(1):
             self.btns.r_pressed = 1
             self.btns.hold = 1
         self.btns.reset_db_t()
     
 
     def l_press(self, t) -> None:
-        if self.btns.buttons.read() >= self.btns.l_btn[0] and self.btns.buttons.read() <= self.btns.l_btn[1]:
+        if self.btns.check_btn_val(0):
             self.btns.l_pressed = 1
             self.btns.hold = 1
         self.btns.reset_db_t()
