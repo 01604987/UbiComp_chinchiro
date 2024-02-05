@@ -11,11 +11,11 @@ from micropython import const
 
 buttons = ADC(0)
 
-_r_min = 100
-_r_max = 110
+_r_min = 92
+_r_max = 102
 
-_l_min = 188
-_l_max = 198
+_l_min = 174
+_l_max = 184
 
 r_pressed = 0
 l_pressed= 0
