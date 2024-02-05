@@ -93,7 +93,7 @@ class Buttons_ADC:
     def __init__(self, t_ADC_val, l_ADC_val, r_ADC_val) -> None:
 
         # initialize analog digital converter
-        buttons = ADC(0)
+        self.buttons = ADC(0)
 
         self.l_btn = [l_ADC_val - 5, l_ADC_val + 5, 0]
         self.r_btn = [r_ADC_val - 5, r_ADC_val + 5, 0]
