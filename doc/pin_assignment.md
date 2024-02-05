@@ -26,8 +26,9 @@ MPU 6050 SDA = GPIO 13 (D7)<br>
 Data Out = GPIO 5 (D1) Pin.OUT <br>
 
 ## Distance Sensor
-HCSR04 ECHO = GPIO 0 (D3) Pin.IN <br>
-HCSR04 TRIG = GPIO 16 (D0) Pin.OUT <br>
+HCSR04 ECHO = GPIO 16 (D0) Pin.IN <br>
+HCSR04 TRIG = GPIO 0 (D3) Pin.OUT <br>
+Note: Other way will prevent boot if D3 is pulled LOW. <br>
 
 ## Free Pins:
 GPIO 14 (D5) Safe to use <br>
