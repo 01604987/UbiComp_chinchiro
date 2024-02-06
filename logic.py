@@ -1,7 +1,7 @@
 from state_manager import MENU_S, State
 from led_manager import LIGHTS, Led
 from audio import Audio
-from buttons import Buttons_ADC
+from buttons_adc import Buttons_ADC
 from shake import Shake
 from time import sleep
 from micropython import mem_info
