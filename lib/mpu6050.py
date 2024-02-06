@@ -10,7 +10,12 @@ class accel():
         self.iic.start()
         self.iic.writeto(self.addr, bytearray([107, 0]))
         self.iic.stop()
-
+    
+    def sleep(self):
+        self.iic.start()
+        self.iic.writeto(self.addr, bytearray([107, 0x40]))
+        self.iic.stop()
+    
     def get_raw_values(self):
         self.iic.start()
         a = self.iic.readfrom_mem(self.addr, 0x3B, 14)

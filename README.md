@@ -13,6 +13,16 @@ As for TX1/RX1, the read port (RX) is reserved for flash memory on the esp 8266,
 Micropython does not seem to support software serial on the esp 8266.
 
 ## DFplayer mini
+
+### Current
+
+Not initiated: 0mA
+Idle: 10mA
+Average during shaking: 20mA-40mA
+Max: 60mA
+Hung up: 55mA
+
+
 ### Multichannel
 The DFplayer mini does not support multi channel audio playback on speakers. Every file played will be mono.<br>
 

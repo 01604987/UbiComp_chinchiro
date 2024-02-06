@@ -77,7 +77,12 @@ class Logic:
         while True:
             self.btns.poll_adc()
             self._initial(self.network)
-            self._shaking()
+            try:
+                self._shaking()
+            except Exception as err:
+                sleep(2)
+                raise EndGame
+                
             self._end()
             
     
@@ -107,7 +112,7 @@ class Logic:
     def _shaking(self):
         
         #! set button irq for shaking
-
+        self.shake.initialize_module()
         while True:
             self.btns.poll_adc()
 
@@ -115,6 +120,7 @@ class Logic:
                 raise EndGame
             # poll accel values
             self.shake.update()
+ 
             # detect axis being shaken
             axis = self.shake.get_axis()
             
@@ -175,9 +181,11 @@ class Logic:
         self.rst = 0
         self.network = None
         self.shake.reset_values()
+        self.shake.deinitialize()
         self.audio.player_0.module_reset()
         self.audio.player_1.module_reset()
         self.btns.reset_db_t()
+        gc.collect()
 
 
 

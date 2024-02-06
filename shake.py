@@ -5,8 +5,28 @@ import time
 class Shake:
 
     def __init__(self, scl, sda, freq=100000) -> None:
+
+        self.scl = scl
+        self.sda = sda
+        self.freq = freq
+
+        self.i2c = None
+        self.imu = None
+
+        self.default_interval = 10000
+        # init: [[current val, last val, interval, max val], ...]
+        self.values = [[-1,-1,self.default_interval, -1],[-1,-1,self.default_interval, -1],[-1,-1,self.default_interval, -1]]
+        self.axis = None
+        self.max_set = 0
+        
+    def deinitialize(self) -> None:
+        self.imu.sleep()
+        self.i2c = None
+        self.imu = None
+        
+    def initialize_module(self) -> None:
         try:
-            self.i2c = I2C(scl = scl, sda = sda, freq = freq)
+            self.i2c = I2C(scl = self.scl, sda = self.sda, freq = self.freq)
         except Exception as err:
             print(f"Error during i2c initialization with err code {str(err)}")
         
@@ -15,11 +35,6 @@ class Shake:
         except Exception as err:
             print(f"Error during imu initialization with err code {str(err)}")
 
-        self.default_interval = 10000
-        # init: [[current val, last val, interval, max val], ...]
-        self.values = [[-1,-1,self.default_interval, -1],[-1,-1,self.default_interval, -1],[-1,-1,self.default_interval, -1]]
-        self.axis = None
-        self.max_set = 0
 
     def get_axis(self):
         return self.axis
