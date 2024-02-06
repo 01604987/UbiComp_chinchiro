@@ -25,3 +25,15 @@ Setting the volume level onto the DFplayer can result in delays, therefore, it i
 
 ### HW Bug
 On some occasions, the DFplayer may hang up and stop receiving write commands. This may be solvable [via software](https://reprage.com/posts/2018-05-08-dfplayer-mini-cheat-sheet/), however, it might be easier to include a switch to cut and connect the vcc on the DFplayer mini. This can also be used as a mute switch.
+
+## Buttons
+Unfortunately the nodemcu ESP8266 comes with a variety of limitations regarding Pin state, GPIO input and output. Information can be taken from here: <br>
+https://lastminuteengineers.com/esp8266-pinout-reference/ <br>
+https://randomnerdtutorials.com/esp8266-pinout-reference-gpios/ <br>
+Because this project utilizes a lot of different modules and components, availability of pins are also limited, therefore a way to generally save on GPIO pins is to move the control of buttons to the single unused ADC pin (A0) on the ESP8266. By correctly setting up resistors and voltage drops for each push buttons, different buttons can represent different voltages detectable by the ADC and thus map to different button functions.
+
+The ESP 8266 can support up to 10 bit resolution leading to 1024 samples for the its ADC. It should be noted that the ADC can not handle voltages beyond 1v, however, most dev boards, including the NodeMCU ESP 8266, have internal voltage deviders that allow the ADC to operate with up to 3.3v.
+
+
+This strategy allows us to control all buttons with a single pin, essentially saving up to 3 GPIO pins.
+For this current button setup, please see the included Circuit Diagram in the Miro Board.
