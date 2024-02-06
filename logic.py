@@ -1,7 +1,7 @@
 from state_manager import MENU_S, State
 from led_manager import LIGHTS, Led
 from audio import Audio
-from buttons import Buttons
+from buttons import Buttons_ADC
 from shake import Shake
 from time import sleep
 from micropython import mem_info
@@ -14,7 +14,7 @@ class EndGame(Exception):
 
 class Logic:
 
-    def __init__(self, btns:Buttons, s_m:State, led:Led , audio: Audio ,network = None, shake: Shake = None, vibration = None) -> None:
+    def __init__(self, btns:Buttons_ADC, s_m:State, led:Led , audio: Audio ,network = None, shake: Shake = None, vibration = None) -> None:
         self.btns = btns
         # state_manager
         self.s_m = s_m
@@ -39,11 +39,12 @@ class Logic:
         # on right button press light up different light configs
         # on left button press blink for confirmation
 
-        self.btns.set_btn_irq("right", self._step_menu)
-        self.btns.set_btn_irq("left", self._choose_menu)
+        self.btns.set_btn_irq("right", self._step_menu_ADC)
+        self.btns.set_btn_irq("left", self._choose_menu_ADC)
 
         while True:
-            sleep(0.5)
+            sleep(0.01)
+            self.btns.poll_adc()
             # check button menu selection
             if self.btns.get_l_pressed():
                 self.s_m.set_menu_state(self.btns.get_r_pressed(len(MENU_S)))
@@ -65,15 +66,16 @@ class Logic:
         
         self.s_m.set_game_state("initial")
 
-        self.btns.set_btn_irq("right", self._play_sound)
-        self.audio.player_0.volume(20)
-        self.audio.player_1.volume(20)
+        #self.btns.set_btn_irq("right", self._play_sound)
+        #self.audio.player_0.volume(20)
+        #self.audio.player_1.volume(20)
         #self.btns.set_btn_irq("right", self._set_light)
-        self.btns.set_btn_irq("left", self._end_game)
+        self.btns.set_btn_irq("left", self._end_game_ADC)
 
         # led light determined by right button presse counter
 
         while True:
+            self.btns.poll_adc()
             self._initial(self.network)
             self._shaking()
             self._end()
@@ -85,9 +87,11 @@ class Logic:
         interval = 2
 
         # setup timer to periodically blink stuff
-
+        
+        #! set button irq for initial
         while True:
-            sleep(0.5)
+            self.btns.poll_adc()
+            sleep(0.02)
             if self.rst:
                 raise EndGame
             #print("in initial sleeping")
@@ -102,8 +106,11 @@ class Logic:
 
     def _shaking(self):
         
+        #! set button irq for shaking
 
         while True:
+            self.btns.poll_adc()
+
             if self.rst:
                 raise EndGame
             # poll accel values
@@ -176,7 +183,31 @@ class Logic:
 
     ##################################################################################################################
     # irq for button presses are defined here
+    # ADC buttons
+    
+    def _step_menu_ADC(self, t):
+        if self.btns.check_btn_val(1):
+            self.btns.r_pressed += 1
+            print(f"Current menu counter: {self.btns.r_pressed}")
+            self.btns.hold = 1
+        self.btns.reset_db_t()
         
+    def _choose_menu_ADC(self, t):
+        if self.btns.check_btn_val(0):
+            self.btns.l_pressed = 1
+            self.btns.hold = 1
+        self.btns.reset_db_t()
+    
+    def _end_game_ADC(self, t):
+        if self.btns.check_btn_val("left"):
+            print(f"Ending current game")
+            self.btns.hold = 1
+            self.rst = 1
+    
+    
+    
+    # Pin buttons
+    
     def _step_menu(self, t):
         if self.btns.check_btn_val("right"):
             self.btns.r_pressed += 1

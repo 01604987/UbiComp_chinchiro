@@ -1,5 +1,5 @@
 from machine import Pin
-from buttons import Buttons
+from buttons import Buttons_ADC
 from state_manager import State
 from logic import Logic
 from led_manager import Led
@@ -28,8 +28,8 @@ _UART_1 = const(1)
 # In order to use USB repl for debugging after webrepl has been disabled, maybe a button or menu select can be used to reactivate os.dupterm
 
 # init button pins
-left_btn = Pin(_L_BTN, Pin.IN)
-right_btn = Pin(_R_BTN, Pin.IN)
+#left_btn = Pin(_L_BTN, Pin.IN)
+#right_btn = Pin(_R_BTN, Pin.IN)
 
 
 # init mpu6050 pins
@@ -39,7 +39,14 @@ sda = Pin(13)
 
 # init classes
 
-buttons = Buttons(None, left_btn, right_btn)
+#buttons = Buttons(None, left_btn, right_btn)
+
+t_btn = 0
+l_btn = 96
+r_btn = 180
+
+buttons = Buttons_ADC(t_btn, l_btn, r_btn)
+                  
 state = State()
 led = Led()
 # _UART_1 first because this address is not bound to USB repl and can safely be used. When reenable repl, can simply leave out second param.
@@ -52,6 +59,9 @@ g = Logic(buttons, state, led, audio, None, shake)
 #dereference to safe a bit of mem
 left_btn = None
 right_btn = None
+t_btn = None
+l_btn = None
+r_btn = None
 scl = None
 sda = None
 buttons = None
