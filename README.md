@@ -7,6 +7,19 @@ A workflow documentation as well as parts list and idea protype can be found in 
 # Modules
 ## ESP8266
 TODO Description of excact model like nodemcu
+
+### Current Draw
+Idle: 50mA <br>
+During Shaking:
+- Average: 150-220mA
+- Min: 100mA
+- Max: 300mA
+
+note:<br> 
+MAx limit = 500mA from usb power <br>
+GPIO pin limit: 12mA - 20mA <br>
+Unsure, how much can be drawn through 3.3v Pins
+
 ### Limitations, Problems & Solutions
 #### Serial TX/RX
 The ESP8266 supports 2 hardware serial ports. TX0/RX0 on pin 1/3 respectively and TX1/RX1 on pin 2/0. On the pin out sheet, TX2/RX2 are marked on pin 15/13, however, these are the same serial connections as TX0/RX0 and with switchable can be made active in TX2/RX2 instead.<br>
