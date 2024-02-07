@@ -3,6 +3,7 @@ from led_manager import LIGHTS, Led
 from audio import Audio
 from buttons_adc import Buttons_ADC
 from shake import Shake
+from distance import Distance
 from time import sleep
 from micropython import mem_info
 import random
@@ -14,7 +15,7 @@ class EndGame(Exception):
 
 class Logic:
 
-    def __init__(self, btns:Buttons_ADC, s_m:State, led:Led , audio: Audio ,network = None, shake: Shake = None, vibration = None) -> None:
+    def __init__(self, btns:Buttons_ADC, s_m:State, led:Led , audio: Audio ,network = None, shake: Shake = None, distance: Distance = None, vibration = None) -> None:
         self.btns = btns
         # state_manager
         self.s_m = s_m
@@ -25,6 +26,7 @@ class Logic:
         self.led = led
         self.audio = audio
         self.shake = shake
+        self.distance = distance
 
     def start(self):
         while True:
@@ -41,7 +43,9 @@ class Logic:
 
         self.btns.set_btn_irq("right", self._step_menu_ADC)
         self.btns.set_btn_irq("left", self._choose_menu_ADC)
-
+        
+        # TODO implement options handling like voice assistance or language?
+        # TODO add debug option that activates webrepl
         while True:
             sleep(0.01)
             self.btns.poll_adc()
@@ -60,24 +64,25 @@ class Logic:
             self.network = None
         if state == 1:
             # multiplayer
-            # initialize network
+            #! initialize network
             #! dummy value
             self.network = 1
         
         self.s_m.set_game_state("initial")
 
         #self.btns.set_btn_irq("right", self._play_sound)
-        #self.audio.player_0.volume(20)
-        #self.audio.player_1.volume(20)
+        self.audio.player_0.volume(20)
+        self.audio.player_1.volume(20)
         #self.btns.set_btn_irq("right", self._set_light)
         self.btns.set_btn_irq("left", self._end_game_ADC)
 
         # led light determined by right button presse counter
 
+        #! replace with for loop max length 3
         while True:
-            self.btns.poll_adc()
-            self._initial(self.network)
+            #self.btns.poll_adc()
             try:
+                self._initial(self.network)
                 self._shaking()
             except Exception as err:
                 sleep(2)
@@ -85,34 +90,47 @@ class Logic:
                 
             self._end()
             
-    
+    # TODO don't need to initialize network here, do it in _game()
     def _initial(self, network = None):
         # setup distance sensor
+        self.distance.initialize()
+        self.btns.set_btn_irq("right", None)
+        #! set/remove button irq for initial
         
-        interval = 2
-
+        #return
         # setup timer to periodically blink stuff
-        
-        #! set button irq for initial
         while True:
             self.btns.poll_adc()
             sleep(0.02)
             if self.rst:
                 raise EndGame
-            #print("in initial sleeping")
-            # self.led.set_light(self.btns.get_r_pressed(len(LIGHTS))))
-            
-            # poll distance sensor
-            distance = 5
-            # if sensor measure > interval
-            if distance > interval:
-                # stop any blinking leds, timers or sound effect that are designed only for initial
+            if self.distance.static():
                 break
 
+            #! LED indicating setting down device
+
+        sleep(1)
+
+        while True:
+            self.btns.poll_adc()
+            sleep(0.02)
+
+            #! LED inidicating taking up device
+            if self.rst:
+                raise EndGame
+
+            # if sensor measure > interval
+            if not self.distance.static():
+                # stop any blinking leds, timers or sound effect that are designed only for initial
+                break
+        sleep(1)
+        
     def _shaking(self):
         
         #! set button irq for shaking
         self.shake.initialize_module()
+        sleep(0.5)
+        shake_counter = 0
         while True:
             self.btns.poll_adc()
 
@@ -125,6 +143,11 @@ class Logic:
             axis = self.shake.get_axis()
             
             if axis == None:
+                # DEBUG
+                # TODO add button to for simulating distance sensor
+                if self.distance.static() and shake_counter != 0:
+                    print("Ending shaking")
+                    raise EndGame
                 # no shaking or undefined axis
                 continue
 
@@ -145,6 +168,7 @@ class Logic:
                 
             try:
                 if sign_inverse <= 0:
+                    shake_counter += 1
                     # reset max value
                     self.shake.values[axis][3] = 0
 
