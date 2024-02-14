@@ -19,3 +19,6 @@ class Distance:
     def static(self) -> int:
         return self.sensor.distance_mm() <= self.threshold
     
+    def pick_up(self):
+        return self.sensor.distance_mm() >= 100
+    

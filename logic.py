@@ -4,6 +4,7 @@ from audio import Audio
 from buttons_adc import Buttons_ADC
 from shake import Shake
 from distance import Distance
+from score import Score
 from time import sleep
 from micropython import mem_info
 import random
@@ -27,6 +28,7 @@ class Logic:
         self.audio = audio
         self.shake = shake
         self.distance = distance
+        self.score = Score()
 
     def start(self):
         while True:
@@ -79,25 +81,36 @@ class Logic:
         # led light determined by right button presse counter
 
         #! replace with for loop max length 3
-        while True:
+        self._init_game(self.network)
+        for i in range(3):
             #self.btns.poll_adc()
             try:
-                self._initial(self.network)
+                self._initiate()
                 self._shaking()
+                gc.collect()
+                result = self._result()
+                gc.collect()
+                print(self.score.my_nums)
+                if result:
+                    print("Ending turn")
+                    break
             except Exception as err:
+                print(f"Exception in init_game with err code {str(err)}")
                 sleep(2)
                 raise EndGame
                 
-            self._end()
+        self._end()
             
     # TODO don't need to initialize network here, do it in _game()
-    def _initial(self, network = None):
+            
+    def _init_game(self, network = None):
         # setup distance sensor
         self.distance.initialize()
         self.btns.set_btn_irq("right", None)
         #! set/remove button irq for initial
         
-        #return
+
+    def _initiate(self):
         # setup timer to periodically blink stuff
         while True:
             self.btns.poll_adc()
@@ -120,7 +133,7 @@ class Logic:
                 raise EndGame
 
             # if sensor measure > interval
-            if not self.distance.static():
+            if self.distance.pick_up():
                 # stop any blinking leds, timers or sound effect that are designed only for initial
                 break
         sleep(1)
@@ -147,7 +160,8 @@ class Logic:
                 # TODO add button to for simulating distance sensor
                 if self.distance.static() and shake_counter != 0:
                     print("Ending shaking")
-                    raise EndGame
+                    #! play dice done shaking sound
+                    break
                 # no shaking or undefined axis
                 continue
 
@@ -160,11 +174,12 @@ class Logic:
             # micro shake has max audio volume cap because values very high
 
             #! shake detection on sign change
-            try:
-                # max value divided by last value = negative => sign changed == shake detected
-                sign_inverse = self.shake.values[axis][3] / self.shake.values[axis][1]
-            except ZeroDivisionError as err:
+            if self.shake.values[axis][1] == 0:
                 continue
+            
+            # max value divided by last value = negative => sign changed == shake detected
+            sign_inverse = self.shake.values[axis][3] / self.shake.values[axis][1]
+            
                 
             try:
                 if sign_inverse <= 0:
@@ -185,9 +200,11 @@ class Logic:
 
                     #! play audio
                     if self.shake.values[axis][0] <= 0:
-                        self.audio.play(0)
+                        print("left")
+                        #self.audio.play(0)
                     else:
-                        self.audio.play(1)
+                        print("right")
+                        #self.audio.play(1)
                     #! start vibration
                         
                     #! send udp package                        
@@ -195,9 +212,31 @@ class Logic:
             except Exception as err:
                 print(f"Exception during shaking with err code {str(err)}")
 
+    def _result(self):
+        # random 3 numbers
+        counter = 0
+        while True:
+            rand = random.getrandbits(4)
+
+            if rand < 12:
+                self.score.my_nums[counter] = rand % 6 + 1
+                counter += 1
+            if counter > 2:
+                break
+        
+        # check if numbers clears table
+        if self.score.check_score(1):
+            return 1
+
+        return 0
     
+
+            
+
+
     def _end(self):
-        raise(NotImplementedError)
+        raise(EndGame)
+        #raise(NotImplementedError)
 
     def reset_logic(self):
         self.btns.reset_buttons()
@@ -209,6 +248,7 @@ class Logic:
         self.audio.player_0.module_reset()
         self.audio.player_1.module_reset()
         self.btns.reset_db_t()
+        self.score.reset_score()
         gc.collect()
 
 
