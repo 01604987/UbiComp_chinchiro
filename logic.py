@@ -150,7 +150,10 @@ class Logic:
             if self.rst:
                 raise EndGame
             # poll accel values
-            self.shake.update()
+            try:
+                self.shake.update()
+            except Exception as err:
+                print(f"here wiht err {err}")
  
             # detect axis being shaken
             axis = self.shake.get_axis()
@@ -180,10 +183,16 @@ class Logic:
             # max value divided by last value = negative => sign changed == shake detected
             sign_inverse = self.shake.values[axis][3] / self.shake.values[axis][1]
             
+            
                 
             try:
                 if sign_inverse <= 0:
+                    
+                    print(axis)
                     shake_counter += 1
+                    if shake_counter % 6 == 0:
+                        self.audio.player_0.volume(20)
+                        self.audio.player_1.volume(20)
                     # reset max value
                     self.shake.values[axis][3] = 0
 
@@ -201,13 +210,14 @@ class Logic:
                     #! play audio
                     if self.shake.values[axis][0] <= 0:
                         print("left")
-                        #self.audio.play(0)
+                        self.audio.play(0)
                     else:
                         print("right")
-                        #self.audio.play(1)
+                        self.audio.play(1)
                     #! start vibration
                         
-                    #! send udp package                        
+                    #! send udp package
+                    #sleep(0.05)
             
             except Exception as err:
                 print(f"Exception during shaking with err code {str(err)}")
