@@ -6,12 +6,20 @@ from led_manager import Led
 from audio import Audio
 from shake import Shake
 from distance import Distance
+from connection import Connection
+from net import Server
 from micropython import const, mem_info
 
 # setup logging
 
 # Main will be running after successful boot.
 print("Hello World")
+
+_IP_SERVER = const('192.168.1.10')
+_IP_CLIENT = const('192.168.1.11')
+_PORT = const(5000)
+_SSID = None
+_PASSWORD = None
 
 #! move comments to some other doc to safe on mem/storage ?
 ###### BUTTONS ######
@@ -66,8 +74,10 @@ led = Led()
 audio = Audio(_UART_1, _UART_0)
 shake = Shake(scl, sda, 100000)
 distance = Distance(_TRIGGER, _ECHO)
+network = Server(_IP_SERVER, _PORT)
+conn = Connection(_IP_SERVER, _SSID, _PASSWORD)
 
-g = Logic(buttons, state, led, audio, None, shake, distance)
+g = Logic(buttons, state, led, audio, network, shake, distance, None, conn)
 
 
 #dereference to safe a bit of mem ?

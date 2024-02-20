@@ -20,7 +20,8 @@ class Shake:
         self.max_set = 0
         
     def deinitialize(self) -> None:
-        self.imu.sleep()
+        if self.imu:
+            self.imu.sleep()
         self.i2c = None
         self.imu = None
         

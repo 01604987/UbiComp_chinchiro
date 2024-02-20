@@ -6,6 +6,8 @@ from shake import Shake
 from distance import Distance
 from score import Score
 from time import sleep
+from connection import Connection
+from net import Server
 from micropython import mem_info
 import random
 import gc
@@ -16,12 +18,12 @@ class EndGame(Exception):
 
 class Logic:
 
-    def __init__(self, btns:Buttons_ADC, s_m:State, led:Led , audio: Audio ,network = None, shake: Shake = None, distance: Distance = None, vibration = None) -> None:
+    def __init__(self, btns:Buttons_ADC, s_m:State, led:Led , audio: Audio ,network: Server = None, shake: Shake = None, distance: Distance = None, vibration = None, conn:Connection = None) -> None:
         self.btns = btns
         # state_manager
         self.s_m = s_m
-        self.network_config = network
-        self.network = None
+        self.network = network
+        self.network_active = 0
         # reset or game ended trigger
         self.rst = 0
         self.led = led
@@ -29,6 +31,7 @@ class Logic:
         self.shake = shake
         self.distance = distance
         self.score = Score()
+        self.conn = conn
 
     def start(self):
         while True:
@@ -63,12 +66,25 @@ class Logic:
 
         if state == 0:
             # single player
-            self.network = None
+            self.network_active = None
         if state == 1:
             # multiplayer
-            #! initialize network
-            #! dummy value
-            self.network = 1
+            self.conn.init()
+            while not self.conn.connect():
+                #do something blink or led
+                sleep(1.5)
+            
+            self.network.init_tcp()
+            while not self.network.accept_conn():
+                # do led loading etc..
+                sleep(1)
+            
+            # TCP socket established
+            print("socket established")
+            # random number 1-6 rolled
+            # send to oppopnent & receive from oppnent
+            # higher number starts round
+
         
         self.s_m.set_game_state("initial")
 
@@ -252,7 +268,7 @@ class Logic:
         self.btns.reset_buttons()
         self.s_m.reset_state()
         self.rst = 0
-        self.network = None
+        #self.network = None
         self.shake.reset_values()
         self.shake.deinitialize()
         self.audio.player_0.module_reset()

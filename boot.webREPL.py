@@ -1,12 +1,12 @@
 # This file is executed on every boot (including wake-boot from deepsleep)
 #import esp
 #esp.osdebug(None)
-import os, machine, time, network
+import os, machine, time, net
 os.dupterm(None, 1) # disable REPL on UART(0)
 import gc
 import webrepl
 
-
+_IP = '192.168.1.10'
 def do_connect():
     
     # WiFi SSID and Password
@@ -14,8 +14,9 @@ def do_connect():
     wifi_password = None     # YOUR WiFi PASSWORD
 
     # Wireless config : Station mode
-    station = network.WLAN(network.STA_IF)
+    station = net.WLAN(net.STA_IF)
     station.active(True)
+    station.ifconfig((_IP, '255.255.255.0', '192.168.1.1', '8.8.8.8'))
 
     # Continually try to connect to WiFi access point
     while not station.isconnected():
@@ -31,7 +32,7 @@ def do_connect():
     
 
 
-do_connect()
+do_connect(_IP)
 webrepl.start()
 # set cpu to 160mhz
 machine.freq(160000000)
