@@ -23,9 +23,8 @@ class Buttons_ADC:
         self.hold = 0
 
     def _debounce(self, func) -> None:
-        #if func == None:
-        #    return
-
+        if not func:
+            return
         if not self.db_t_active:
             self.db_t_active = 1
             #! db_t_active needs to be reset within custom_function

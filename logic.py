@@ -70,17 +70,45 @@ class Logic:
         if state == 1:
             # multiplayer
             self.conn.init()
-            while not self.conn.connect():
-                #do something blink or led
-                sleep(1.5)
+        
+        # set button irq
             
-            self.network.init_tcp()
+            while not self.conn.connect():
+                print('connecting to wifi')
+                # do something blink or led
+                # allow end game/break
+                sleep(1.5)
+            print("connected to wifi")
+            print(self.conn.net.ifconfig())
+            try:
+                self.network.init_tcp()
+            except Exception as err:
+                print(str(err))
+                raise
             while not self.network.accept_conn():
+                print('awaiting incomming connection')
                 # do led loading etc..
+                # allow end game/break
                 sleep(1)
             
+
             # TCP socket established
             print("socket established")
+
+            my_num = self.score.roll_1()
+            print(f"my rolled num: {my_num}")
+            self.network.send_tcp_data(my_num)
+            print("data sent")
+            while True:
+                op_num = self.network.receive_tcp_data()
+                print(f"op rolled num: {op_num}")
+                if op_num:
+                    break
+                sleep(1)
+
+            
+            self.network.deinit_tcp()
+
             # random number 1-6 rolled
             # send to oppopnent & receive from oppnent
             # higher number starts round
@@ -275,6 +303,7 @@ class Logic:
         self.audio.player_1.module_reset()
         self.btns.reset_db_t()
         self.score.reset_score()
+        self.network.deinit_tcp()
         gc.collect()
 
 

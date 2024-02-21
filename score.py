@@ -1,4 +1,5 @@
 from micropython import const
+import random
 
 class Score:
 
@@ -16,6 +17,23 @@ class Score:
         self.op_score = 0
         self.my_nums = [0, 0, 0]
         self.op_nums = [0, 0, 0]
+
+    
+    def roll_1(self):
+        # random 3 numbers
+        counter = 1
+        while True:
+            rand = random.getrandbits(4)
+
+            if rand < 12:
+                die_1 = rand % 6 + 1
+                counter += 1
+            if counter > 1:
+                break
+        
+        # check if numbers clears table
+        
+        return die_1
 
 
     def check_score(self, player) -> int:
