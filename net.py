@@ -143,11 +143,12 @@ class Client:
             self.send_tcp_data(10)
             return 1
         except OSError as err:
-            print("in socket rec", err)
+            #print("in socket rec", err)
             if err.errno == errno.ECONNRESET:
                 self.deinit_tcp()
                 self.init_tcp()
                 return 0
+            raise
             
 
               
@@ -156,7 +157,7 @@ class Client:
         try:
             data = data.to_bytes(2, 'big')
             self.client_socket.sendall(data)
-        except Exception as e:
+        except OSError as e:
             print("Error sending TCP", e)
             #self.deinit_tcp()
         
