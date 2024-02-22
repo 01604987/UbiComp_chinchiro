@@ -77,8 +77,8 @@ class Logic:
                 gc.collect()
                 self.s_m.set_game_state("result")
                 hit = self._result()
-                result = self.score.my_score                
-                # if multiplayer #! ERROR HERE
+                result = self.score.my_nums              
+                # if multiplayer
                 if self.s_m.get_menu_state():
                     try:
                         self.network.send_tcp_data(self.list_to_num(result))
@@ -125,11 +125,14 @@ class Logic:
             # allow end game/break
             sleep(1)
         print("socket established")
+        print(self.network.client_tcp_address)
 
         self.s_m.curr_turn = self._establish_start()
         print("My Turn" if self.s_m.curr_turn else "Op Turn")
 
-        self.network.deinit_tcp()
+        self.network.init_udp()
+
+        #self.network.deinit_tcp()
 
     #! HANDLE ECONRESET
     def _establish_start(self):
@@ -190,8 +193,9 @@ class Logic:
         # setup timer to periodically blink stuff
         while True:
             self._poll_btns()
-            sleep(0.2)
+            sleep(0.1)
             if self.distance.static():
+                print('ready for pickup')
                 break
 
             #! LED indicating setting down device
@@ -200,11 +204,12 @@ class Logic:
 
         while True:
             self._poll_btns()
-            sleep(0.2)
+            sleep(0.1)
 
             # if sensor measure > interval
             if self.distance.pick_up():
                 # stop any blinking leds, timers or sound effect that are designed only for initial
+                print('ready for shaking')
                 break
         sleep(1)
         
@@ -261,6 +266,8 @@ class Logic:
                         self.audio.volume(20)
                     # reset max value
                     self.shake.values[axis][3] = 0
+                    if self.s_m.get_menu_state():
+                        self.network.send_udp_data(shake_counter)
 
                     #! calculate magnitude
 
@@ -315,6 +322,9 @@ class Logic:
             raise EndGame
 
     def reset_logic(self):
+        if self.network.connected_tcp:
+            self.network.send_tcp_data(13)
+
         self.btns.reset_buttons()
         self.s_m.reset_state()
         self.rst = 0
@@ -353,58 +363,9 @@ class Logic:
             self.rst = 1
     
     
-    
-    # Pin buttons
-    
-    def _step_menu(self, t):
-        if self.btns.check_btn_val("right"):
-            self.btns.r_pressed += 1
-            print(f"Current menu counter: {self.btns.get_r_pressed()}")
-                    
-        self.btns.reset_db_t()
-
-    def _choose_menu(self, t):
-        if self.btns.check_btn_val("left"):
-            self.btns.l_pressed = 1
-            #self.state_manager.set_menu_state(self.r_pressed)
-        
-        self.btns.reset_db_t()
-
-    def _set_light(self, t):
-        if self.btns.check_btn_val("right"):
-            # TODO change this to function set
-            self.btns.r_pressed += 1
-            print(f"Setting light to: {self.btns.get_r_pressed(len(LIGHTS))}")
-            gc.collect()
-            mem_info()
-            #self.led.set_light(self.btns.get_r_pressed(len(LIGHTS)))
-        self.btns.reset_db_t()
-
-    def _end_game(self, t):
-        if self.btns.check_btn_val("left"):
-            print(f"Ending current game")
-            self.rst = 1
-            #! Change to raise
-            #raise EndGame
-            #self.audio.player_0.module_reset()
-            #self.audio.player_1.module_reset()
-        #self.btns.reset_db_t()
-
-    def _play_sound(self, t):
-        if self.btns.check_btn_val("right"):
-            gc.collect()
-            mem_info()
-            self.btns.r_pressed +=1
-            if self.btns.r_pressed % 2:
-                self.audio.play(0)
-            else:
-                self.audio.play(1)
-                
-        self.btns.reset_db_t()
-
 # UTILS-----------------------------------
         
-    def list_to_num(nums :list):
+    def list_to_num(self, nums :list):
         concat_nums = ''.join(map(str, nums))
         val = int(concat_nums)
         return val
