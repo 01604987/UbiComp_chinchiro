@@ -59,60 +59,53 @@ class Logic:
                 self.s_m.set_menu_state(self.btns.get_r_pressed(len(MENU_S)))
                 break
 
-    # TODO don't need to initialize network here, do it in _game()
-    def _game(self):
-        #! todo impl button to exit network
-        # initiate game state
-        self.btns.set_btn_irq("left", self._end_game_ADC)
-        
-        state = self.s_m.get_menu_state()
 
-        if state == 0:
-            # single player
-            self.network_active = None
-        if state == 1:
-            # multiplayer
-            self.conn.init()
-            self._init_multiplayer()
-       
-            
-        self.s_m.set_game_state("initial")
-        #? set button irq
-        #self.btns.set_btn_irq("right", self._play_sound)
-        #self.btns.set_btn_irq("right", self._set_light)
-        self.audio.volume(20)
+    def _game(self):
+        self._init_game()
 
         # led light determined by right button presse counter
-
         #! replace with for loop max length 3
-        self._init_game()
         for i in range(3):
-            #self.btns.poll_adc()
             try:
-                self._initiate()
-                self._shaking()
                 gc.collect()
-                result = self._result()
-                try:
-                    self.network.send_tcp_data(self.list_to_num(result))
-                except OSError as err:
-                    print("Err sending result tcp", err)
+                self.s_m.set_game_state("initiate")
+                self._initiate()
+
+                self.s_m.set_game_state("shaking")
+                self._shaking()
+
+                gc.collect()
+                self.s_m.set_game_state("result")
+                hit = self._result()
+                result = self.score.my_score                
+                # if multiplayer #! ERROR HERE
+                if self.s_m.get_menu_state():
+                    try:
+                        self.network.send_tcp_data(self.list_to_num(result))
+                    except OSError as err:
+                        print("Err sending result tcp", err)
+
                 gc.collect()
                 print(self.score.my_nums)
-                if result:
+                if hit:
                     print("Ending turn")
                     break
-            except Exception as err:
-                print(f"Exception in init_game with err code {str(err)}")
-                sleep(2)
+            except EndGame as err:
+                print(f"Ending Game")
+                sleep(1)
                 raise EndGame
+            
+            except Exception as err:
+                print(f"Exception in game with err code {str(err)}")
+                raise Exception
                 
-        self._end()
+        raise EndGame
     
     #! HANDLE ECONRESET
     def _init_multiplayer(self):
         while not self.conn.connect():
             print('connecting to wifi')
+            self._poll_btns()
             # do something blink or led
             # allow end game/break
             sleep(1.5)
@@ -126,31 +119,34 @@ class Logic:
             raise
 
         while not self.network.accept_conn():
+            self._poll_btns()
             print('awaiting incomming connection')
             # do led loading etc..
             # allow end game/break
             sleep(1)
         print("socket established")
 
-        self.s_m.curr_turn = self._establish_start()           
+        self.s_m.curr_turn = self._establish_start()
+        print("My Turn" if self.s_m.curr_turn else "Op Turn")
 
         self.network.deinit_tcp()
 
     #! HANDLE ECONRESET
     def _establish_start(self):
         while True:
+            self._poll_btns()
+            
             my_num = self.score.roll_1()
             # show my num on led left in blue
             print(f"my rolled num: {my_num}")
             self.network.send_tcp_data(my_num)
             print("data sent")
-            while True:
-                op_num = self.network.receive_tcp_data()
-                if op_num:
-                    print(f"op rolled num: {op_num}")
-                    break
-                print("awaiting response")
+            while not (op_num := self.network.receive_tcp_data()):
+                print("await response")
                 sleep(1)
+
+            print (f"op rolled num: {op_num}")
+            
             # show op num on led right in red
 
             # sleep 0.5
@@ -167,18 +163,34 @@ class Logic:
     #! maybe merge with initialize
     def _init_game(self):
         # setup distance sensor
-        self.distance.initialize()
         self.btns.set_btn_irq("right", None)
-        #! set/remove button irq for initial
+        self.btns.set_btn_irq("left", self._end_game_ADC)
+        self.distance.initialize()
+
+
+        #! todo impl button to exit network
+        # initiate game state
+        
+        
+        state = self.s_m.get_menu_state()
+
+        if state == 0:
+            # single player
+            self.network_active = None
+        if state == 1:
+            # multiplayer
+            self.conn.init()
+            self._init_multiplayer()
+       
+
+        self.audio.volume(20)
         
 
     def _initiate(self):
         # setup timer to periodically blink stuff
         while True:
-            self.btns.poll_adc()
-            sleep(0.02)
-            if self.rst:
-                raise EndGame
+            self._poll_btns()
+            sleep(0.2)
             if self.distance.static():
                 break
 
@@ -187,12 +199,8 @@ class Logic:
         sleep(1)
 
         while True:
-            self.btns.poll_adc()
-            sleep(0.02)
-
-            #! LED inidicating taking up device
-            if self.rst:
-                raise EndGame
+            self._poll_btns()
+            sleep(0.2)
 
             # if sensor measure > interval
             if self.distance.pick_up():
@@ -207,10 +215,7 @@ class Logic:
         sleep(0.5)
         shake_counter = 0
         while True:
-            self.btns.poll_adc()
-
-            if self.rst:
-                raise EndGame
+            self._poll_btns()
             # poll accel values
             try:
                 self.shake.update()
@@ -300,14 +305,14 @@ class Logic:
             return 1
 
         return 0
-    
 
             
 
 
-    def _end(self):
-        raise(EndGame)
-        #raise(NotImplementedError)
+    def _poll_btns(self):
+        self.btns.poll_adc()
+        if self.rst:
+            raise EndGame
 
     def reset_logic(self):
         self.btns.reset_buttons()
@@ -379,6 +384,8 @@ class Logic:
         if self.btns.check_btn_val("left"):
             print(f"Ending current game")
             self.rst = 1
+            #! Change to raise
+            #raise EndGame
             #self.audio.player_0.module_reset()
             #self.audio.player_1.module_reset()
         #self.btns.reset_db_t()

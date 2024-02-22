@@ -5,16 +5,16 @@ from micropython import const
 # MENU_STATES
 MENU_S = const(("single","multi"))
 # GAME_STATES
-GAME_S = const(("initial", "shaking", "result", "reset", "change"))
+GAME_S = const(("initiate", "shaking", "result", "reset", "change"))
 
 class State:
 
-    # only allow switching menu states in "initial"
+    # only allow switching menu states in "initiate"
     # index is important
     
     def __init__(self) -> None:
         self.curr_menu_state = None
-        self.curr_menu_state = None
+        self.curr_game_state = None
         # 0 = op turn, 1 = my turn
         self.curr_turn = None
     
@@ -37,11 +37,11 @@ class State:
             if isinstance(state, int):
                 if state >= len(GAME_S):
                    raise(ValueError)
-                self.curr_menu_state = state
+                self.curr_game_state = state
 
             elif isinstance(state, str):
                 # index() raises ValueError if value not in list
-                self.curr_menu_state = GAME_S.index(state)
+                self.curr_game_state = GAME_S.index(state)
             else:
                 raise(TypeError)
             
@@ -52,8 +52,8 @@ class State:
             
     # TODO maybe discard getter and setter and instead use direct vairable access
     def get_game_state(self) -> int:
-        return self.curr_menu_state
+        return self.curr_game_state
         
     def reset_state(self) -> None:
-        self.curr_menu_state = None
+        self.curr_game_state = None
         self.curr_menu_state = None

@@ -108,7 +108,7 @@ while True:
 
 while True:
     
-    num = 666
+    num = 6
     try:
         data = num.to_bytes(2, 'big')
         tcp_socket.sendall(data)
