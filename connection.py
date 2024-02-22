@@ -1,10 +1,11 @@
 import network
+from micropython import const
 
 class Connection:
     def __init__(self, ip, ssid, password) -> None:
-        self.ip = ip
-        self.ssid = ssid
-        self.password = password
+        self.ip = const(ip)
+        self.ssid = const(ssid)
+        self.password = const(password)
         self.net = None
 
     def init(self):

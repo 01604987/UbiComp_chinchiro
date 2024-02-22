@@ -1,5 +1,6 @@
 import socket
 import errno
+from micropython import const
 
 ###################################################################
 ############### TCP CODES ################
@@ -27,8 +28,8 @@ import errno
 class Server:
     
     def __init__(self, ip, port) -> None:
-        self.server_ip = ip
-        self.server_tcp_port = port
+        self.server_ip = const(ip)
+        self.server_tcp_port = const(port)
         self.server_tcp = None
         self.server_udp = None
         self.client_tcp = None
@@ -124,10 +125,16 @@ class Server:
         try:
             # Attempt to send data to the UDP socket
             self.server_udp.sendto(data, (self.client_tcp_address[0], self.server_tcp_port + 1))
-            print(f"attemtp to send data {data} to {self.client_tcp_address[0]}, {self.server_tcp_port + 1}")
             
         except OSError as e:
             print(e)
             raise
 
+    def receive_udp_data(self):
+        try:
+            data = self.server_udp.recv(2)
+            return data
+        except OSError as err:
+            if err.errno == errno.EAGAIN:
+                return None
 

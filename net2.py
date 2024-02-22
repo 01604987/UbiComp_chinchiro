@@ -100,3 +100,13 @@ class Client:
         except OSError as err:
             if err.errno == errno.EAGAIN:
                 return None
+
+    def send_udp_data(self, data):
+        data = data.to_bytes(2, 'big')
+        try:
+            # Attempt to send data to the UDP socket
+            self.client_udp.sendto(data, (self.server_ip, self.server_tcp_port + 1))
+            
+        except OSError as e:
+            print(e)
+            raise

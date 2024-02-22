@@ -8,7 +8,7 @@ from score import Score
 from time import sleep
 from connection import Connection
 from net import Server
-from micropython import mem_info
+from micropython import const, mem_info
 import random
 import gc
 
@@ -19,19 +19,19 @@ class EndGame(Exception):
 class Logic:
 
     def __init__(self, btns:Buttons_ADC, s_m:State, led:Led , audio: Audio ,network: Server = None, shake: Shake = None, distance: Distance = None, vibration = None, conn:Connection = None) -> None:
-        self.btns = btns
+        self.btns = const(btns)
         # state_manager
-        self.s_m = s_m
-        self.network = network
+        self.s_m = const(s_m)
+        self.network = const(network)
         self.network_active = 0
         # reset or game ended trigger
         self.rst = 0
-        self.led = led
-        self.audio = audio
-        self.shake = shake
-        self.distance = distance
-        self.score = Score()
-        self.conn = conn
+        self.led = const(led)
+        self.audio = const(audio)
+        self.shake = const(shake)
+        self.distance = const(distance)
+        self.score = const(Score())
+        self.conn = const(conn)
 
     def start(self):
         while True:
@@ -335,6 +335,7 @@ class Logic:
         self.btns.reset_db_t()
         self.score.reset_score()
         self.network.deinit_tcp()
+        self.conn.deinit()
         gc.collect()
 
 
