@@ -1,6 +1,29 @@
 import socket
 import errno
 
+###################################################################
+############### TCP CODES ################
+##########################################
+
+# 10 connection established
+# 11 next try
+# 12 turn end
+# 13 game end
+# 1 hit score
+# 2 hit score
+# 3 hit score
+# 4 hit score
+# 5 hit score
+# 6 hit score
+# 123 hit score
+# 111 hit score
+# 222 hit score
+# 333 hit score
+# 444 hit score
+# 555 hit score
+# 666 hit score
+
+
 class Server:
     
     def __init__(self, ip, port) -> None:
@@ -29,9 +52,11 @@ class Server:
 
     def deinit_tcp(self):
         self.connected = False
-        self.client_socket.close()
-        self.server_socket.close()
-        
+        if self.client_socket:
+            self.client_socket.close()
+        if self.server_socket:
+            self.server_socket.close()
+            
 
     def accept_conn(self):
         if self.server_socket:
@@ -39,11 +64,11 @@ class Server:
                 # will raise OSError if unsuccessful
                 self.client_socket, self.client_address = self.server_socket.accept()
                 # connection established data
-                self.send_tcp_data(1)
+                self.send_tcp_data(10)
                 while not (data:= self.receive_tcp_data()):
                     pass
                 print(data)
-                if data == 1:
+                if data == 10:
                     self.connected = True
                 return 1
             except OSError as err:
@@ -108,12 +133,14 @@ class Client:
         # connect tcp here ?
  
         try:
-            self.send_tcp_data(1)
+            # receive will raise OSError if server socket not open
             while not (data:= self.receive_tcp_data()):
                 pass
             print(data)
-            if data == 1:
+            
+            if data == 10:
                 self.connected = True
+            self.send_tcp_data(10)
             return 1
         except OSError as err:
             print("in socket rec", err)

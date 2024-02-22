@@ -69,7 +69,7 @@ def receive_tcp_data(tcp_socket):
                 raise
         if data:
             data = int.from_bytes(data, 'big')
-        print(data)
+        #print(data)
         return data
 
 
@@ -88,8 +88,11 @@ while True:
     time.sleep(1)
     
     try:
-        resp = receive_tcp_data(tcp_socket)
-        send_tcp_data(tcp_socket,1)
+        while not (data:= receive_tcp_data(tcp_socket)):
+            pass
+        print(data)
+        send_tcp_data(tcp_socket,10)
+
         break
     except OSError as err:
         print("in socket rec", err)
@@ -98,26 +101,31 @@ while True:
             tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             tcp_socket.setblocking(False)
             continue
-        
+    
         
     time.sleep(1)
 
 
-
-num = 6
-try:
-    data = num.to_bytes(2, 'big')
-    tcp_socket.sendall(data)
-except OSError as e:
-    tcp_socket.close()
-    print("Error sending TCP", e)
-
-resp = None
 while True:
-    result = receive_tcp_data(tcp_socket)
-    if result:
+    
+    num = 666
+    try:
+        data = num.to_bytes(2, 'big')
+        tcp_socket.sendall(data)
+    except OSError as e:
+        tcp_socket.close()
+        print("Error sending TCP", e)
+
+    resp = None
+    while True:
+        result = receive_tcp_data(tcp_socket)
+        if result:
+            print(result)
+            break
+        print("awaiting response")
+        time.sleep(1)
+    if result != num:
+        print(f"me:{num} op:{result}")
         break
-    print("awaiting response")
-    time.sleep(1)
 
 tcp_socket.close()

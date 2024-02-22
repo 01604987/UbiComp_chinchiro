@@ -39,4 +39,5 @@ class Audio:
             #self.player2._fadeout_timer.deinit()
             #self.player2.volume(self.player2._max_volume)
             #self.player1.fadeout()
-            self.player_1.play(3)
+            if self.player_1:
+                self.player_1.play(3)

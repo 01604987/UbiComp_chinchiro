@@ -93,6 +93,10 @@ class Logic:
                 self._shaking()
                 gc.collect()
                 result = self._result()
+                try:
+                    self.network.send_tcp_data(self.list_to_num(result))
+                except OSError as err:
+                    print("Err sending result tcp", err)
                 gc.collect()
                 print(self.score.my_nums)
                 if result:
@@ -104,7 +108,8 @@ class Logic:
                 raise EndGame
                 
         self._end()
-            
+    
+    #! HANDLE ECONRESET
     def _init_multiplayer(self):
         while not self.conn.connect():
             print('connecting to wifi')
@@ -131,7 +136,7 @@ class Logic:
 
         self.network.deinit_tcp()
 
-    
+    #! HANDLE ECONRESET
     def _establish_start(self):
         while True:
             my_num = self.score.roll_1()
@@ -389,3 +394,10 @@ class Logic:
                 self.audio.play(1)
                 
         self.btns.reset_db_t()
+
+# UTILS-----------------------------------
+        
+    def list_to_num(nums :list):
+        concat_nums = ''.join(map(str, nums))
+        val = int(concat_nums)
+        return val
