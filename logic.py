@@ -59,8 +59,11 @@ class Logic:
                 self.s_m.set_menu_state(self.btns.get_r_pressed(len(MENU_S)))
                 break
 
+    # TODO don't need to initialize network here, do it in _game()
     def _game(self):
+        #! todo impl button to exit network
         # initiate game state
+        self.btns.set_btn_irq("left", self._end_game_ADC)
         
         state = self.s_m.get_menu_state()
 
@@ -70,62 +73,19 @@ class Logic:
         if state == 1:
             # multiplayer
             self.conn.init()
-        
-        # set button irq
+            self._init_multiplayer()
+       
             
-            while not self.conn.connect():
-                print('connecting to wifi')
-                # do something blink or led
-                # allow end game/break
-                sleep(1.5)
-            print("connected to wifi")
-            print(self.conn.net.ifconfig())
-            try:
-                self.network.init_tcp()
-            except Exception as err:
-                print(str(err))
-                raise
-            while not self.network.accept_conn():
-                print('awaiting incomming connection')
-                # do led loading etc..
-                # allow end game/break
-                sleep(1)
-            
-
-            # TCP socket established
-            print("socket established")
-
-            my_num = self.score.roll_1()
-            print(f"my rolled num: {my_num}")
-            self.network.send_tcp_data(my_num)
-            print("data sent")
-            while True:
-                op_num = self.network.receive_tcp_data()
-                print(f"op rolled num: {op_num}")
-                if op_num:
-                    break
-                sleep(1)
-
-            
-            self.network.deinit_tcp()
-
-            # random number 1-6 rolled
-            # send to oppopnent & receive from oppnent
-            # higher number starts round
-
-        
         self.s_m.set_game_state("initial")
-
+        #? set button irq
         #self.btns.set_btn_irq("right", self._play_sound)
-        self.audio.player_0.volume(20)
-        self.audio.player_1.volume(20)
         #self.btns.set_btn_irq("right", self._set_light)
-        self.btns.set_btn_irq("left", self._end_game_ADC)
+        self.audio.volume(20)
 
         # led light determined by right button presse counter
 
         #! replace with for loop max length 3
-        self._init_game(self.network)
+        self._init_game()
         for i in range(3):
             #self.btns.poll_adc()
             try:
@@ -145,9 +105,62 @@ class Logic:
                 
         self._end()
             
-    # TODO don't need to initialize network here, do it in _game()
-            
-    def _init_game(self, network = None):
+    def _init_multiplayer(self):
+        while not self.conn.connect():
+            print('connecting to wifi')
+            # do something blink or led
+            # allow end game/break
+            sleep(1.5)
+
+        print("connected to wifi")
+        print(self.conn.net.ifconfig())
+        try:
+            self.network.init_tcp()
+        except Exception as err:
+            print(str(err))
+            raise
+
+        while not self.network.accept_conn():
+            print('awaiting incomming connection')
+            # do led loading etc..
+            # allow end game/break
+            sleep(1)
+        print("socket established")
+
+        self.s_m.curr_turn = self._establish_start()           
+
+        self.network.deinit_tcp()
+
+    
+    def _establish_start(self):
+        while True:
+            my_num = self.score.roll_1()
+            # show my num on led left in blue
+            print(f"my rolled num: {my_num}")
+            self.network.send_tcp_data(my_num)
+            print("data sent")
+            while True:
+                op_num = self.network.receive_tcp_data()
+                if op_num:
+                    print(f"op rolled num: {op_num}")
+                    break
+                print("awaiting response")
+                sleep(1)
+            # show op num on led right in red
+
+            # sleep 0.5
+
+            if my_num > op_num:
+                # blink left
+                return 1
+            elif my_num < op_num:
+                # blink right
+                return 0
+
+            # clear led, reroll
+    
+    #! maybe merge with initialize
+    def _init_game(self):
         # setup distance sensor
         self.distance.initialize()
         self.btns.set_btn_irq("right", None)
@@ -235,8 +248,7 @@ class Logic:
                     print(axis)
                     shake_counter += 1
                     if shake_counter % 6 == 0:
-                        self.audio.player_0.volume(20)
-                        self.audio.player_1.volume(20)
+                        self.audio.volume(20)
                     # reset max value
                     self.shake.values[axis][3] = 0
 
@@ -299,8 +311,7 @@ class Logic:
         #self.network = None
         self.shake.reset_values()
         self.shake.deinitialize()
-        self.audio.player_0.module_reset()
-        self.audio.player_1.module_reset()
+        self.audio.reset()
         self.btns.reset_db_t()
         self.score.reset_score()
         self.network.deinit_tcp()

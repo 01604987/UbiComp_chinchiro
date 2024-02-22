@@ -36,6 +36,7 @@ class Server:
     def accept_conn(self):
         if self.server_socket:
             try:
+                # will raise OSError if unsuccessful
                 self.client_socket, self.client_address = self.server_socket.accept()
                 # connection established data
                 self.send_tcp_data(1)
@@ -48,11 +49,10 @@ class Server:
             except OSError as err:
                 if err.errno != errno.EAGAIN:
                     raise
-                    self.deinit_tcp()
                 return 0
         else:
             print("No socket open")
-        
+          
     # data is number from 0 to 666    
     def send_tcp_data(self, data):
         try:
@@ -60,7 +60,7 @@ class Server:
             self.client_socket.sendall(data)
         except Exception as e:
             print("Error sending TCP", e)
-            self.deinit_tcp()
+            #self.deinit_tcp()
         
     # data is number from 0 to 666
     def receive_tcp_data(self):
@@ -68,13 +68,12 @@ class Server:
             data = self.client_socket.recv(2)
         except OSError as err:
             if err.args[0] == errno.EAGAIN:
-                return
+                return 0
             else:
                 print("Error receiving TCP", err)
-                self.deinit_tcp()
                 raise
-        
-        data = int.from_bytes(data, 'big')
+        if data:
+            data = int.from_bytes(data, 'big')
         return data
 
 class Client:
@@ -92,22 +91,58 @@ class Client:
     def deinit_tcp(self):
         self.connected = False
         self.client_socket.close()
-        
+
     def connect_tcp(self):
         if self.client_socket:
             try:
                 self.client_socket.connect((self.server_ip, self.server_port))
-                print("Connection successful!")
+            except OSError as err:
+                if err.errno == errno.EINPROGRESS:
+                    print("Awaiting connection", err)
+                    pass
+                else:
+                    print(str(err))
+                    raise
+
+    def establish_tcp(self):
+        # connect tcp here ?
+ 
+        try:
+            self.send_tcp_data(1)
+            while not (data:= self.receive_tcp_data()):
+                pass
+            print(data)
+            if data == 1:
                 self.connected = True
-                return 1
-            except OSError as e:
+            return 1
+        except OSError as err:
+            print("in socket rec", err)
+            if err.errno == errno.ECONNRESET:
+                self.deinit_tcp()
+                self.init_tcp()
                 return 0
-                if e.args[0] == errno.EINPROGRESS:
-                    # Connection in progress, continue waiting
-                    return 0
-                elif e.args[0] in [errno.EALREADY, errno.EWOULDBLOCK]:
-                    # Socket already connecting or operation would block
-                    return 0
-        else:
-            print("No open client_socket")
-                
+            
+
+              
+    # data is number from 0 to 666    
+    def send_tcp_data(self, data):
+        try:
+            data = data.to_bytes(2, 'big')
+            self.client_socket.sendall(data)
+        except Exception as e:
+            print("Error sending TCP", e)
+            #self.deinit_tcp()
+        
+    # data is number from 0 to 666
+    def receive_tcp_data(self):
+        try:
+            data = self.client_socket.recv(2)
+        except OSError as err:
+            if err.args[0] == errno.EAGAIN:
+                return 0
+            else:
+                print("Error receiving TCP", err)
+                raise
+        if data:
+            data = int.from_bytes(data, 'big')
+        return data
