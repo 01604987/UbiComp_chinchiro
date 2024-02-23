@@ -7,9 +7,10 @@ from micropython import const
 ##########################################
 
 # 10 connection established
-# 11 next try
+# 11 message ack
 # 12 turn end
-# 13 game end
+# 13 calculate result
+# 14 game end
 # 1 hit score
 # 2 hit score
 # 3 hit score

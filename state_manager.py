@@ -15,8 +15,8 @@ class State:
     def __init__(self) -> None:
         self.curr_menu_state = None
         self.curr_game_state = None
-        # 0 = op turn, 1 = my turn
-        self.curr_turn = None
+        # 0 = my turn, 1 = op turn
+        self.my_turn = None
     
     def set_menu_state(self, state : int) -> None :
         try:

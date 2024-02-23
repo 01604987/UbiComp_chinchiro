@@ -4,68 +4,96 @@ import random
 class Score:
 
     SCORE_TABLE = const((None, 0, 1, 2, 3, 4, 5, 6, 7, 8))
-    
+
+    #-1 = hifumi
+    # 0 = no hit
+    # 1 = hit 1
+    # 2 = hit 2
+    # 3 = hit 3
+    # 4 = hit 4
+    # 5 = hit 5
+    # 6 = hit 6
+    # 7 = hit 456
+    # 111 = hit 111
+    # 222 = hit 222
+    # 333 = hit 333
+    # 444 = hit 444
+    # 555 = hit 555
+    # 666 = hit 666  
+     
     def __init__(self) -> None:
-        self.my_score = 0
-        self.op_score = 0
-        self.my_nums = [0, 0, 0]
-        self.op_nums = [0, 0, 0]
+        # index 0 = my_score, index 1 = op_score
+        self.score = [0, 0]
+        self.my_nums = []
+        self.op_nums = []
 
 
     def reset_score(self):
-        self.my_score = 0
-        self.op_score = 0
-        self.my_nums = [0, 0, 0]
-        self.op_nums = [0, 0, 0]
+        self.score.clear()
+        self.score.extend((0, 0))
+        self.my_nums.clear()
+        self.op_nums.clear()
 
     
-    def roll_1(self):
+    def roll_dice(self, dice):
         # random 3 numbers
+        self.my_nums.clear()
         counter = 1
         while True:
             rand = random.getrandbits(4)
 
             if rand < 12:
-                die_1 = rand % 6 + 1
+                self.my_nums.append(rand % 6 + 1)
                 counter += 1
-            if counter > 1:
+            if counter > dice:
                 break
-        
-        # check if numbers clears table
-        
-        return die_1
 
 
     def check_score(self, player) -> int:
         num = None
-        if player:
-            num = self.my_nums.copy()
+        if player == 0:
+            num = tuple(sorted(self.my_nums))
         else:
-            num = self.op_nums.copy()
+            num = tuple(sorted(self.op_nums))
+
+        if len(num) != 3:
+            print("Error: Expected exactly three numbers")
+            raise Exception
         
-        num.sort()
         # check for hit
         if num[0] == num[1]:
             # check for zorome
             if num[0] == num[2]:
-                self.my_score = int(''.join(map(str, num)))
+                self.score[player] = int(''.join(map(str, num)))
             # hit is last number
             else:
-                self.score = num[2]
-            return 1
+                self.score[player] = num[2]
+            return
         
         # check for hit
         if num[1] == num[2]:
             # hit is first number
-            self.my_score = num[0]
-            return 1
+            self.score[player] = num[0]
+            return
         
+        if num[0] == 4 and num[1] == 5 and num[2] == 6:
+            self.score[player] = 7
+            return
+
         # check for hifumi
         if num[0] == 1 and num[1] == 2 and num[2] == 3:
-            self.my_score = -1
-            return 1
+            self.score[player] = -1
+            return
         # else no hit
         else:
-            self.my_score = 0
-            return 0
-            
+            self.score[player] = 0
+            return
+
+    def list_to_nums(self):
+        concat_nums = ''.join(map(str, self.my_nums))
+        val = int(concat_nums)
+        return val    
+          
+    def nums_to_list(self, nums):
+        self.op_nums.clear()
+        self.op_nums.extend(int(d) for d in str(nums))

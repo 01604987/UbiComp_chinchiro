@@ -1,15 +1,14 @@
+# from led_manager import LIGHTS, Led
+# from audio import Audio
+# from buttons_adc import Buttons_ADC
+# from shake import Shake
+# from distance import Distance
+# from connection import Connection
+# from net import Server
+# from micropython import const, mem_info
 from state_manager import MENU_S, State
-from led_manager import LIGHTS, Led
-from audio import Audio
-from buttons_adc import Buttons_ADC
-from shake import Shake
-from distance import Distance
 from score import Score
 from time import sleep
-from connection import Connection
-from net import Server
-from micropython import const, mem_info
-import random
 import gc
 
 
@@ -18,20 +17,35 @@ class EndGame(Exception):
 
 class Logic:
 
-    def __init__(self, btns:Buttons_ADC, s_m:State, led:Led , audio: Audio ,network: Server = None, shake: Shake = None, distance: Distance = None, vibration = None, conn:Connection = None) -> None:
-        self.btns = const(btns)
+    def __init__(self, btns, s_m, led , audio ,network = None, shake = None, distance = None, vibration = None, conn = None) -> None:
+        self.btns = btns
         # state_manager
-        self.s_m = const(s_m)
-        self.network = const(network)
-        self.network_active = 0
+        self.s_m = s_m
+        self.network = network
+        self.network_active = False
         # reset or game ended trigger
         self.rst = 0
-        self.led = const(led)
-        self.audio = const(audio)
-        self.shake = const(shake)
-        self.distance = const(distance)
-        self.score = const(Score())
-        self.conn = const(conn)
+        self.led = led
+        self.audio = audio
+        self.shake = shake
+        self.distance = distance
+        self.score = Score()
+        self.conn = conn
+
+    # def __init__(self, btns:Buttons_ADC, s_m:State, led:Led , audio: Audio ,network: Server = None, shake: Shake = None, distance: Distance = None, vibration = None, conn:Connection = None) -> None:
+    #     self.btns = btns
+    #     # state_manager
+    #     self.s_m = s_m
+    #     self.network = network
+    #     self.network_active = False
+    #     # reset or game ended trigger
+    #     self.rst = 0
+    #     self.led = led
+    #     self.audio = audio
+    #     self.shake = shake
+    #     self.distance = distance
+    #     self.score = Score()
+    #     self.conn = conn
 
     def start(self):
         while True:
@@ -39,6 +53,11 @@ class Logic:
             try:
                 self._game()
             except EndGame:
+                print("Ending Game")
+                sleep(0.1)
+                if self.network_active:
+                    print("sending end game over tcp")
+                    self.network.send_tcp_data(14)
                 self.reset_logic()
                 pass
 
@@ -65,42 +84,100 @@ class Logic:
 
         # led light determined by right button presse counter
         #! replace with for loop max length 3
-        for i in range(3):
-            try:
-                gc.collect()
-                self.s_m.set_game_state("initiate")
-                self._initiate()
 
-                self.s_m.set_game_state("shaking")
-                self._shaking()
+        while True:
+            for i in range(3):
+                try:
+                    gc.collect()
+                    self.s_m.set_game_state("initiate")
+                    if self.s_m.my_turn:
+                        self._initiate()
 
-                gc.collect()
-                self.s_m.set_game_state("result")
-                hit = self._result()
-                result = self.score.my_nums              
-                # if multiplayer
-                if self.s_m.get_menu_state():
-                    try:
-                        self.network.send_tcp_data(self.list_to_num(result))
-                    except OSError as err:
-                        print("Err sending result tcp", err)
+                    self.s_m.set_game_state("shaking")
+                    if self.s_m.my_turn:
+                        self._shaking()
 
-                gc.collect()
-                print(self.score.my_nums)
-                if hit:
-                    print("Ending turn")
-                    break
-            except EndGame as err:
-                print(f"Ending Game")
-                sleep(1)
-                raise EndGame
-            
-            except Exception as err:
-                print(f"Exception in game with err code {str(err)}")
-                raise Exception
+                    if not self.s_m.my_turn:
+                        # check udp, check tcp in loop
+                        # if got tcp message break out of loop/ return from loop
+                        pass
+
+                    gc.collect()
+                    self.s_m.set_game_state("result")
+                    # both my turn + op turn:
+                    # my turn = calculate result
+                    # op turn = await for my result and calculate result/score
+                    self._result()       
+
+                    
+                    if self.s_m.my_turn:
+                        # if multiplayer
+                        if self.network_active:
+                            # function to send results
+                            try:
+                                self.network.send_tcp_data(self.score.list_to_nums())
+                                while not (ack := self.network.receive_tcp_data()):
+                                    self._poll_btns()
+                                if ack == 11:
+                                    pass
+                                else: raise EndGame
+                            except OSError as err:
+                                print("Err sending result, or receiving ack", err)
+
+                        gc.collect()
+                        print(self.score.my_nums)
+                        # self.s_m.my_turn = 1 if my turn. self.score.score[1] is op_score.
+                        if self.score.score[not self.s_m.my_turn]:
+                            print("Ending turn")
+                            break
+                except EndGame:
+                    raise
+                except Exception as err:
+                    print(f"Exception in game with err code {str(err)}")
+                    raise Exception
+                    
+            #raise EndGame
                 
-        raise EndGame
-    
+            
+            # op_nums none during single player
+            if self.score.my_nums and self.score.op_nums:
+                # calculate winner 
+                self._calculate_winner()
+
+                sleep(3)
+                # wait for ack
+
+                # flush all nums and scores
+                self.score.reset_score()
+                # receive tcp data
+
+            if self.network_active:
+
+                if self.s_m.my_turn:
+                    # send turn end signal
+                    self.network.send_tcp_data(12)
+                    # await ack
+                    while not (ack := self.network.receive_tcp_data()):
+                        self._poll_btns()
+                    if ack == 11:
+                        pass
+                    else: raise EndGame
+
+                else:
+                    while not (code := self.network.receive_tcp_data()):
+                        self._poll_btns()
+                    if code == 14:
+                        raise EndGame
+                    # turn end
+                    elif code == 12:
+                        pass
+                    
+                    self.score.reset_score()
+                    self.network.send_tcp_data(11)
+
+            if self.s_m.my_turn and self.network_active:
+                self.s_m.my_turn = not self.s_m.my_turn
+
     #! HANDLE ECONRESET
     def _init_multiplayer(self):
         while not self.conn.connect():
@@ -127,8 +204,8 @@ class Logic:
         print("socket established")
         print(self.network.client_tcp_address)
 
-        self.s_m.curr_turn = self._establish_start()
-        print("My Turn" if self.s_m.curr_turn else "Op Turn")
+        self.s_m.my_turn = self._establish_start()
+        print("My Turn" if self.s_m.my_turn else "Op Turn")
 
         self.network.init_udp()
 
@@ -137,14 +214,14 @@ class Logic:
     #! HANDLE ECONRESET
     def _establish_start(self):
         while True:
-            self._poll_btns()
-            
-            my_num = self.score.roll_1()
+            self.score.reset_score()
+            self.score.roll_dice(1)
             # show my num on led left in blue
-            print(f"my rolled num: {my_num}")
-            self.network.send_tcp_data(my_num)
+            print(f"my rolled num: {self.score.my_nums[0]}")
+            self.network.send_tcp_data(self.score.my_nums[0])
             print("data sent")
             while not (op_num := self.network.receive_tcp_data()):
+                self._poll_btns()
                 print("await response")
                 sleep(1)
 
@@ -154,11 +231,13 @@ class Logic:
 
             # sleep 0.5
 
-            if my_num > op_num:
+            if self.score.my_nums[0] > op_num:
                 # blink left
+                self.score.reset_score()
                 return 1
-            elif my_num < op_num:
+            elif self.score.my_nums[0] < op_num:
                 # blink right
+                self.score.reset_score()
                 return 0
 
             # clear led, reroll
@@ -174,16 +253,16 @@ class Logic:
         #! todo impl button to exit network
         # initiate game state
         
-        
-        state = self.s_m.get_menu_state()
 
-        if state == 0:
+        if self.s_m.curr_menu_state == 0:
             # single player
-            self.network_active = None
-        if state == 1:
+            self.network_active = False
+            self.s_m.my_turn = 1
+        if self.s_m.curr_menu_state == 1:
             # multiplayer
             self.conn.init()
             self._init_multiplayer()
+            self.network_active = True
        
 
         self.audio.volume(20)
@@ -266,7 +345,7 @@ class Logic:
                         self.audio.volume(20)
                     # reset max value
                     self.shake.values[axis][3] = 0
-                    if self.s_m.get_menu_state():
+                    if self.network_active:
                         self.network.send_udp_data(shake_counter)
 
                     #! calculate magnitude
@@ -297,23 +376,41 @@ class Logic:
 
     def _result(self):
         # random 3 numbers
-        counter = 0
-        while True:
-            rand = random.getrandbits(4)
+        # only generate if it is my turn
+        # if not my turn pass and receive
 
-            if rand < 12:
-                self.score.my_nums[counter] = rand % 6 + 1
-                counter += 1
-            if counter > 2:
-                break
-        
-        # check if numbers clears table
-        if self.score.check_score(1):
-            return 1
-
-        return 0
-
+        if self.s_m.my_turn:
+            self.score.roll_dice(3)
             
+            # check if numbers clears table
+            self.score.check_score(0)
+        
+        else:
+            # check for op_nums
+            while not (op_nums := self.network.receive_tcp_data()):
+                self._poll_btns()
+            if op_nums == 14:
+                raise EndGame
+            if len(op_nums) != 3:
+                print("OP_num not well formed!")
+                raise EndGame
+            self.score.nums_to_list(op_nums)
+            self.score.check_score(1)
+            # send ack of package
+            self.network.send_tcp_data(11)
+            
+
+    def _calculate_winner(self):
+        if self.score.score[0] > self.score.score[1]:
+            print('red', self.score.my_nums, 'score: ', self.score.score[0])
+            # if my_win : red display my_num
+        elif self.score.score[0] < self.score.score[1]:
+            # if op_win : blue display op_num
+            print('blue', self.score.op_nums, 'score: ', self.score.score[1])
+        else:
+            # can both be no hit = same score
+            print('red', self.score.my_nums, 'score: ', self.score.score[0], 'blue', self.score.op_nums, 'score: ', self.score.score[1])
+            # alternate blinking red, blue
 
 
     def _poll_btns(self):
@@ -363,10 +460,3 @@ class Logic:
             self.btns.hold = 1
             self.rst = 1
     
-    
-# UTILS-----------------------------------
-        
-    def list_to_num(self, nums :list):
-        concat_nums = ''.join(map(str, nums))
-        val = int(concat_nums)
-        return val

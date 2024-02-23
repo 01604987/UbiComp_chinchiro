@@ -17,9 +17,9 @@ print("Hello World")
 
 _IP_SERVER = const('192.168.1.10')
 _IP_CLIENT = const('192.168.1.11')
-_PORT = const(5000)
-_SSID = None
-_PASSWORD = None
+_PORT = const(5002)
+_SSID = 'TP-Link_2.4Ghz'
+_PASSWORD = 'jkv777kim'
 
 #! move comments to some other doc to safe on mem/storage ?
 ###### BUTTONS ######
@@ -69,9 +69,10 @@ _ECHO = const(16)
 #buttons = Buttons(None, left_btn, right_btn)
 buttons = Buttons_ADC(_T_BTN, _L_BTN, _R_BTN)               
 state = State()
-led = Led()
+led = Led(4, 21)
 # _UART_1 first because this address is not bound to USB repl and can safely be used. When reenable repl, can simply leave out second param.
-audio = Audio(_UART_1, _UART_0)
+#audio = Audio(_UART_1, _UART_0)
+audio = Audio(_UART_1)
 shake = Shake(scl, sda, 100000)
 distance = Distance(_TRIGGER, _ECHO)
 network = Server(_IP_SERVER, _PORT)
