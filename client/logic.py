@@ -199,15 +199,15 @@ class Logic:
         except Exception as err:
             print(str(err))
             raise
-
-        while not self.network.accept_conn():
+        self.network.connect_tcp()
+        while not (res := self.network.establish_tcp()):
             self._poll_btns()
-            print('awaiting incomming connection')
+            print('awaiting established connection')
             # do led loading etc..
             # allow end game/break
             sleep(1)
         print("socket established")
-        print(self.network.client_tcp_address)
+        print(self.network.server_ip)
         self.s_m.my_turn = self._establish_start()
         print("My Turn" if self.s_m.my_turn else "Op Turn")
 
@@ -219,7 +219,8 @@ class Logic:
     def _establish_start(self):
         while True:
             self.score.reset_score()
-            self.score.roll_dice(1)
+            #self.score.roll_dice(1)
+            self.score.my_nums.append(1)
             # show my num on led left in blue
             print(f"my rolled num: {self.score.my_nums[0]}")
             self.network.send_tcp_data(self.score.my_nums[0])
@@ -249,7 +250,7 @@ class Logic:
     #! maybe merge with initialize
     def _init_game(self):
         # setup distance sensor
-        self.btns.set_btn_irq("right", None)
+        self.btns.set_btn_irq("right", self.btns._distance_sim)
         self.btns.set_btn_irq("left", self.btns._end_game_ADC)
         self.distance.initialize()
 
@@ -277,7 +278,7 @@ class Logic:
         while True:
             self._poll_btns()
             sleep(0.1)
-            if self.distance.static():
+            if self.btns.is_static:
                 print('ready for pickup')
                 break
 
@@ -290,7 +291,7 @@ class Logic:
             sleep(0.1)
 
             # if sensor measure > interval
-            if self.distance.pick_up():
+            if not self.btns.is_static:
                 # stop any blinking leds, timers or sound effect that are designed only for initial
                 print('ready for shaking')
                 break
@@ -316,7 +317,7 @@ class Logic:
             if axis == None:
                 # DEBUG
                 # TODO add button to for simulating distance sensor
-                if self.distance.static() and shake_counter != 0:
+                if self.btns.is_static and shake_counter != 0:
                     print("Ending shaking")
                     #! play dice done shaking sound
                     break

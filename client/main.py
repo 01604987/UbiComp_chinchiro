@@ -7,7 +7,7 @@ from audio import Audio
 from shake import Shake
 from distance import Distance
 from connection import Connection
-from net import Server
+from net2 import Client
 from micropython import const, mem_info
 
 # setup logging
@@ -75,8 +75,8 @@ led = Led()
 audio = Audio(_UART_1)
 shake = Shake(scl, sda, 100000)
 distance = Distance(_TRIGGER, _ECHO)
-network = Server(_IP_SERVER, _PORT)
-conn = Connection(_IP_SERVER, _SSID, _PASSWORD)
+network = Client(_IP_SERVER, _PORT)
+conn = Connection(_IP_CLIENT, _SSID, _PASSWORD)
 
 g = Logic(buttons, state, led, audio, network, shake, distance, None, conn)
 

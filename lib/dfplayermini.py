@@ -22,7 +22,7 @@ class Dfplayer:
         self._fadeout_timer = Timer(-1)
 
         self._volume = 15
-        self._max_volume = 15
+        self._max_volume = 30
         self._fadeout_speed = 0
         self.volume(self._volume)
 
@@ -38,7 +38,7 @@ class Dfplayer:
             print("fadeout finished")
             new_volume = 0
             self._fadeout_timer.deinit()
-            #self.stop()
+            self.stop()
             new_volume = self._max_volume # reset volume to max 
         self.volume(new_volume)
 
@@ -66,7 +66,7 @@ class Dfplayer:
     def stop(self):
         self.cmd(0x16)
 
-    def fadeout(self, fadeout_ms=500):
+    def fadeout(self, fadeout_ms=1000):
         # more than 500ms and less than 3000ms
         fadeout_ms = int(sorted([500, fadeout_ms, 3000])[1])
         fade_out_step_ms = 100
@@ -112,3 +112,4 @@ class Dfplayer:
 
     def module_reset(self):
         self.cmd(0x0C)
+

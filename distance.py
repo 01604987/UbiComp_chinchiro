@@ -9,6 +9,7 @@ class Distance:
         self.sensor = None
         self.threshold = 30
         self.overflow = 2400
+        self.is_static = 0
 
     def initialize(self) -> None:
         self.sensor = HCSR04(self.trigger, self.echo)

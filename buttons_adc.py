@@ -21,6 +21,8 @@ class Buttons_ADC:
         self.l_pressed = 0
         self.r_pressed = 0
         self.hold = 0
+        self.rst = 0
+        self.is_static = 0
 
     def _debounce(self, func) -> None:
         if not func:
@@ -125,3 +127,31 @@ class Buttons_ADC:
             if not self.hold:
                 self._debounce(self.r_btn[2])
         # 1024 ADC value = no button presses
+
+
+
+    def _step_menu_ADC(self, t):
+        if self.check_btn_val(1):
+            self.r_pressed += 1
+            print(f"Current menu counter: {self.r_pressed}")
+            self.hold = 1
+        self.reset_db_t()
+        
+    def _choose_menu_ADC(self, t):
+        if self.check_btn_val(0):
+            self.l_pressed = 1
+            self.hold = 1
+        self.reset_db_t()
+    
+    def _end_game_ADC(self, t):
+        if self.check_btn_val("left"):
+            print(f"Ending current game")
+            self.hold = 1
+            self.rst = 1
+    
+    def _distance_sim(self, t):
+        if self.check_btn_val("right"):
+            print(f"distance static")
+            self.hold = 1
+            self.is_static = not self.is_static
+        self.reset_db_t()
