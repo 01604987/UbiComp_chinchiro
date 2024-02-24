@@ -21,7 +21,7 @@ class Client:
         self.client_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.client_udp.setblocking(False)
         try:
-            self.client_udp.bind(('192.168.1.99', self.server_tcp_port + 1))
+            self.client_udp.bind(('192.168.1.11', self.server_tcp_port + 1))
         except OSError as err:
             if err.errno == errno.EADDRINUSE:
                 pass
@@ -72,11 +72,10 @@ class Client:
     # data is number from 0 to 666    
     def send_tcp_data(self, data):
         try:
-            data = data.to_bytes(2, 'big')
-            self.client_tcp.sendall(data)
+            self.client_tcp.sendall(data.to_bytes(2, 'big'))
+            print('Sent: ', data)
         except OSError as e:
             print("Error sending TCP", e)
-            #self.deinit_tcp()
         
     # data is number from 0 to 666
     def receive_tcp_data(self):
@@ -90,10 +89,8 @@ class Client:
                 raise
         if data:
             data = int.from_bytes(data, 'big')
+            print('Received: ', data)
         return data
-
-    def send_udp_data(self, data):
-        return
 
     def receive_udp_data(self):
         try:

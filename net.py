@@ -101,11 +101,10 @@ class Server:
     # data is number from 0 to 666    
     def send_tcp_data(self, data):
         try:
-            data = data.to_bytes(2, 'big')
-            self.client_tcp.sendall(data)
+            self.client_tcp.sendall(data.to_bytes(2, 'big'))
+            print('Sent: ', data)
         except Exception as e:
             print("Error sending TCP", e)
-            #self.deinit_tcp()
         
     # data is number from 0 to 666
     def receive_tcp_data(self):
@@ -119,6 +118,7 @@ class Server:
                 raise
         if data:
             data = int.from_bytes(data, 'big')
+            print('Received: ', data)
         return data
     
     def send_udp_data(self, data):

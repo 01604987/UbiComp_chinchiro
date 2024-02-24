@@ -109,25 +109,9 @@ class Logic:
                     self._result()       
 
                     
-                    if self.s_m.my_turn:
-                        # if multiplayer
-                        if self.network_active:
-                            # function to send results
-                            try:
-                                print("sending results", self.score.my_nums)
-                                self.network.send_tcp_data(self.score.list_to_nums())
-                                while not (ack := self.network.receive_tcp_data()):
-                                    sleep(3)
-                                    self._poll_btns()
-                                if ack == 11:
-                                    pass
-                                else: raise EndGame
-                            except OSError as err:
-                                print("Err sending result, or receiving ack", err)
-
-                        gc.collect()
-                        print(self.score.my_nums)
-                        # self.s_m.my_turn = 1 if my turn. self.score.score[1] is op_score.
+                    
+                    gc.collect()
+                    # self.s_m.my_turn = 1 if my turn. self.score.score[1] is op_score.
                     if self.score.score[not self.s_m.my_turn]:
                         print("Ending turn")
                         break
@@ -136,52 +120,25 @@ class Logic:
                 except Exception as err:
                     print(f"Exception in game with err code {str(err)}")
                     raise Exception
-                    
-            #raise EndGame
                 
             
             # op_nums none during single player
             if self.score.my_nums and self.score.op_nums:
                 # calculate winner 
                 self._calculate_winner()
+                # display score
+                # speak out score
 
                 sleep(3)
-                # wait for ack
-
                 # flush all nums and scores
                 self.score.reset_score()
-                # receive tcp data
 
-            if self.network_active:
 
-                if self.s_m.my_turn:
-                    # send turn end signal
-                    self.network.send_tcp_data(12)
-                    # await ack
-                    while not (ack := self.network.receive_tcp_data()):
-                        sleep(3)
-                        print('waiting for ack')
-                        self._poll_btns()
-                    if ack == 11:
-                        pass
-                    else: raise EndGame
-                
-                else:
-                    while not (code := self.network.receive_tcp_data()):
-                        print(code)
-                        self._poll_btns()
-                        sleep(3)
-                    if code == 14:
-                        raise EndGame
-                    # turn end
-                    elif code == 12:
-                        pass
-                    print(code)
-                    #self.score.reset_score()
-                    self.network.send_tcp_data(11)
-
+            # change turns
+            #self._change_turns()
             if self.network_active:
                 self.s_m.my_turn = not self.s_m.my_turn
+            
 
     #! HANDLE ECONRESET
     def _init_multiplayer(self):
@@ -388,6 +345,14 @@ class Logic:
             
             # check if numbers clears table
             self.score.check_score(0)
+
+            # if multiplayer
+            if self.network_active:
+
+                self.network.send_tcp_data(self.score.list_to_nums())
+                self.wait_for_ack()           
+
+            print('My dice: ', self.score.my_nums)
         
         else:
             # check for op_nums
@@ -416,11 +381,49 @@ class Logic:
             print('red', self.score.my_nums, 'score: ', self.score.score[0], 'blue', self.score.op_nums, 'score: ', self.score.score[1])
             # alternate blinking red, blue
 
+    def _change_turns(self):
+        if self.network_active:
+            if self.s_m.my_turn:
+                # send turn end signal
+                self.network.send_tcp_data(12)
+                # await ack
+                while not (ack := self.network.receive_tcp_data()):
+                    sleep(3)
+                    print('waiting for ack')
+                    self._poll_btns()
+                if ack == 11:
+                    pass
+                else: raise EndGame
+            
+            else:
+                while not (code := self.network.receive_tcp_data()):
+                    print(code)
+                    self._poll_btns()
+                    sleep(3)
+                if code == 14:
+                    raise EndGame
+                # turn end
+                elif code == 12:
+                    pass
+                print(code)
+                #self.score.reset_score()
+                self.network.send_tcp_data(11)
+
+            self.s_m.my_turn = not self.s_m.my_turn
 
     def _poll_btns(self):
         self.btns.poll_adc()
         if self.btns.rst:
             raise EndGame
+        
+    def wait_for_ack(self):
+        while not (ack := self.network.receive_tcp_data()):
+            sleep(3)
+            print('waiting for ack')
+            self._poll_btns()
+        if ack == 11:
+            pass
+        else: raise EndGame
 
     def reset_logic(self):
 
@@ -436,35 +439,3 @@ class Logic:
         self.network.deinit_tcp()
         self.conn.deinit()
         gc.collect()
-
-
-
-    ##################################################################################################################
-    # irq for button presses are defined here
-    # ADC buttons
-    
-    # def _step_menu_ADC(self, t):
-    #     if self.btns.check_btn_val(1):
-    #         self.btns.r_pressed += 1
-    #         print(f"Current menu counter: {self.btns.r_pressed}")
-    #         self.btns.hold = 1
-    #     self.btns.reset_db_t()
-        
-    # def _choose_menu_ADC(self, t):
-    #     if self.btns.check_btn_val(0):
-    #         self.btns.l_pressed = 1
-    #         self.btns.hold = 1
-    #     self.btns.reset_db_t()
-    
-    # def _end_game_ADC(self, t):
-    #     if self.btns.check_btn_val("left"):
-    #         print(f"Ending current game")
-    #         self.btns.hold = 1
-    #         self.rst = 1
-    
-    # def _distance_sim(self, t):
-    #     if self.btns.check_btn_val("right"):
-    #         print(f"distance static")
-    #         self.btns.hold = 1
-    #         self.distance.is_static = 1
-    #     self.btns.reset_db_t()
