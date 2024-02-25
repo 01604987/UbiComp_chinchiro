@@ -1,6 +1,6 @@
 import socket
 import errno
-from time import sleep
+from select import select
 
 
 class Client:
@@ -79,10 +79,17 @@ class Client:
         
     # data is number from 0 to 666
     def receive_tcp_data(self):
+
+        ready_to_read, _, _ = select([self.client_tcp], [], [], 1)
+
+        if not ready_to_read:
+            return 0
+
         try:
             data = self.client_tcp.recv(2)
         except OSError as err:
             if err.args[0] == errno.EAGAIN:
+                print(str(err))
                 return 0
             else:
                 print("Error receiving TCP", err)

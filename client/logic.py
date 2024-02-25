@@ -360,7 +360,7 @@ class Logic:
             while not (op_nums := self.network.receive_tcp_data()):
                 self._poll_btns()
                 print("listening")
-                sleep(3)
+                sleep(0.1)
             if op_nums == 14:
                 raise EndGame
             print("Opponent rolled: ", op_nums)
@@ -388,19 +388,13 @@ class Logic:
                 # send turn end signal
                 self.network.send_tcp_data(12)
                 # await ack
-                while not (ack := self.network.receive_tcp_data()):
-                    sleep(3)
-                    print('waiting for ack')
-                    self._poll_btns()
-                if ack == 11:
-                    pass
-                else: raise EndGame
+                self.wait_for_ack()
             
             else:
                 while not (code := self.network.receive_tcp_data()):
-                    print(code)
+                    print('waiting for turn end')
                     self._poll_btns()
-                    sleep(3)
+                    sleep(0.1)
                 if code == 14:
                     raise EndGame
                 # turn end
@@ -419,7 +413,7 @@ class Logic:
         
     def wait_for_ack(self):
         while not (ack := self.network.receive_tcp_data()):
-            sleep(3)
+            sleep(0.1)
             print('waiting for ack')
             self._poll_btns()
         if ack == 11:
