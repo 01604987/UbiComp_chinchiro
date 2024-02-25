@@ -48,7 +48,7 @@ class Client:
  
         try:
             # receive will raise OSError if server socket not open
-            data = self.receive_tcp_data()
+            data = self.receive_tcp_data(1)
             if not data:
                 return 0
             print(data)
@@ -73,11 +73,11 @@ class Client:
             print("Error sending TCP", e)
         
     # data is number from 0 to 666
-    def receive_tcp_data(self):
-
+    def receive_tcp_data(self, est = None):
+        
         ready_to_read, _, _ = select([self.client_tcp], [], [], 1)
 
-        if not ready_to_read:
+        if not ready_to_read and not est:
             return 0
 
         try:

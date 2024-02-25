@@ -6,7 +6,6 @@
 # from connection import Connection
 # from net import Server
 # from micropython import const, mem_info
-from state_manager import MENU_S, State
 from score import Score
 from time import sleep
 import gc
@@ -79,7 +78,7 @@ class Logic:
             if self.btns.get_l_pressed():
                 #self.s_m.set_menu_state(self.btns.get_r_pressed(len(MENU_S)))
                 #break
-                return self.btns.get_r_pressed(len(MENU_S))
+                return self.btns.get_r_pressed(2)
 
 
     def _game(self, g_mode):

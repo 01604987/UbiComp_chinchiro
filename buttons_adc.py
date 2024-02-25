@@ -32,10 +32,11 @@ class Buttons_ADC:
             self.db_t.init(mode = Timer.ONE_SHOT, period = 30, callback = lambda t: func(t))
     
     def reset_db_t(self) -> None:
-        self.db_t.deinit()
-        self.db_t = None
-        #print("reset")
-    
+        if self.db_t:
+            self.db_t.deinit()
+            self.db_t = None
+            #print("reset")
+        
     def reset_buttons(self) -> None:
         #self.buttons = ADC(0)
 
