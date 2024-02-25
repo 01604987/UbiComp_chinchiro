@@ -444,7 +444,6 @@ class Logic:
         self.shake.reset_values()
         self.shake.deinitialize()
         self.audio.reset()
-        self.btns.reset_db_t()
         self.score.reset_score()
         self.network.deinit_tcp()
         self.conn.deinit()

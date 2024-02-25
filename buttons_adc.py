@@ -15,7 +15,7 @@ class Buttons_ADC:
         self.r_btn = [r_ADC_val - 10, r_ADC_val + 10, 0]
         self.t_btn = [0, 0, 0]
 
-        self.db_t = Timer(0)
+        self.db_t = None
         self.db_t_active = 0
 
         self.l_pressed = 0
@@ -27,14 +27,14 @@ class Buttons_ADC:
     def _debounce(self, func) -> None:
         if not func:
             return
-        if not self.db_t_active:
-            self.db_t_active = 1
+        if not self.db_t:
+            self.db_t = Timer(0)
             #! db_t_active needs to be reset within custom_function
             self.db_t.init(mode = Timer.ONE_SHOT, period = 30, callback = lambda t: func(t))
     
     def reset_db_t(self) -> None:
         self.db_t.deinit()
-        self.db_t_active = 0
+        self.db_t = None
         #print("reset")
     
     def reset_buttons(self) -> None:
@@ -44,8 +44,7 @@ class Buttons_ADC:
         self.r_btn[2] = 0
         self.r_btn[2] = 0
 
-        self.db_t = Timer(0)
-        self.db_t_active = 0
+        self.reset_db_t
 
         self.l_pressed = 0
         self.r_pressed = 0
