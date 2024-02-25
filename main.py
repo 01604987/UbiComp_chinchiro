@@ -1,6 +1,6 @@
 from machine import Pin
 from buttons_adc import Buttons_ADC
-from state_manager import State
+#from state_manager import State
 from logic import Logic
 from led_manager import Led
 from audio import Audio
@@ -72,7 +72,7 @@ _P_NR = const(21)
 
 #buttons = Buttons(None, left_btn, right_btn)
 buttons = Buttons_ADC(_T_BTN, _L_BTN, _R_BTN)               
-state = State()
+#state = State()
 led = Led(p_pin, _P_NR)
 # _UART_1 first because this address is not bound to USB repl and can safely be used. When reenable repl, can simply leave out second param.
 #audio = Audio(_UART_1, _UART_0)
@@ -82,7 +82,7 @@ distance = Distance(_TRIGGER, _ECHO)
 network = Server(_IP_SERVER, _PORT)
 conn = Connection(_IP_SERVER, _SSID, _PASSWORD)
 
-g = Logic(buttons, state, led, audio, network, shake, distance, None, conn)
+g = Logic(buttons, led, audio, network, shake, distance, None, conn)
 
 
 #dereference to safe a bit of mem ?

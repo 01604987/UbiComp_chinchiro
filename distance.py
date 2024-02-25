@@ -15,5 +15,5 @@ class Distance:
         return self.sensor.distance_mm() <= _THRESH
     
     def pick_up(self):
-        return self.sensor.distance_mm() >= _THRESH * 3
+        return self.sensor.distance_mm() >= _THRESH * 2
     

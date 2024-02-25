@@ -17,10 +17,10 @@ class EndGame(Exception):
 
 class Logic:
 
-    def __init__(self, btns, s_m, led , audio ,network = None, shake = None, distance = None, vibration = None, conn = None) -> None:
+    def __init__(self, btns, led , audio ,network = None, shake = None, distance = None, vibration = None, conn = None) -> None:
         self.btns = btns
         # state_manager
-        self.s_m = s_m
+        #self.s_m = s_m
         self.network = network
         self.network_active = False
         # reset or game ended trigger
@@ -30,6 +30,7 @@ class Logic:
         self.distance = distance
         self.score = Score()
         self.conn = conn
+        self.my_turn = 0
 
     # def __init__(self, btns:Buttons_ADC, s_m:State, led:Led , audio: Audio ,network: Server = None, shake: Shake = None, distance: Distance = None, vibration = None, conn:Connection = None) -> None:
     #     self.btns = btns
@@ -47,9 +48,9 @@ class Logic:
 
     def start(self):
         while True:
-            self._menu_select()
+            g_mode = self._menu_select()
             try:
-                self._game()
+                self._game(g_mode)
             except EndGame:
                 print("Ending Game")
                 sleep(0.1)
@@ -76,12 +77,13 @@ class Logic:
             self.btns.poll_adc()
             # check button menu selection
             if self.btns.get_l_pressed():
-                self.s_m.set_menu_state(self.btns.get_r_pressed(len(MENU_S)))
-                break
+                #self.s_m.set_menu_state(self.btns.get_r_pressed(len(MENU_S)))
+                #break
+                return self.btns.get_r_pressed(len(MENU_S))
 
 
-    def _game(self):
-        self._init_game()
+    def _game(self, g_mode):
+        self._init_game(g_mode)
 
         # led light determined by right button presse counter
         #! replace with for loop max length 3
@@ -90,21 +92,21 @@ class Logic:
             for i in range(3):
                 try:
                     gc.collect()
-                    self.s_m.set_game_state("initiate")
-                    if self.s_m.my_turn:
+                    #self.s_m.set_game_state("initiate")
+                    if self.my_turn:
                         self._initiate()
 
-                    self.s_m.set_game_state("shaking")
-                    if self.s_m.my_turn:
+                    #self.s_m.set_game_state("shaking")
+                    if self.my_turn:
                         self._shaking()
 
-                    if not self.s_m.my_turn:
+                    if not self.my_turn:
                         # check udp, check tcp in loop
                         # if got tcp message break out of loop/ return from loop
                         pass
 
                     gc.collect()
-                    self.s_m.set_game_state("result")
+                    #self.s_m.set_game_state("result")
                     # both my turn + op turn:
                     # my turn = calculate result
                     # op turn = await for my result and calculate result/score
@@ -115,14 +117,20 @@ class Logic:
                     gc.collect()
                     # self.s_m.my_turn = 1 if my turn. self.score.score[1] is op_score.
                     #if self.score.score[not self.s_m.my_turn]:
-                    if self.score.check_score(not self.s_m.my_turn):
+                    #if self.score.check_score(not self.s_m.my_turn):
+                    if self.score.check_score(not self.my_turn):
                         print("Ending turn")
                         break
                 except EndGame:
                     raise
                 except Exception as err:
-                    print(f"Exception in game with err code {str(err)}")
-                    raise Exception
+                    # Capture and print more detailed error information
+                    err_type = type(err).__name__
+                    err_msg = str(err)
+                    print(f"Exception in game: {err_type} with message: {err_msg}")
+                    # Optionally, re-raise the error with additional context or simply log it.
+                    raise Exception(f"{err_type} in _game: {err_msg}")
+
                 
             
             # op_nums none during single player
@@ -140,7 +148,8 @@ class Logic:
             # change turns
             #self._change_turns()
             if self.network_active:
-                self.s_m.my_turn = not self.s_m.my_turn
+                #self.s_m.my_turn = not self.s_m.my_turn
+                self.my_turn = not self.my_turn
             
 
     #! HANDLE ECONRESET
@@ -170,8 +179,10 @@ class Logic:
         print("socket established")
         print(self.network.client_tcp_address)
         self.led.stop_timer()
-        self.s_m.my_turn = self._establish_start()
-        print("My Turn" if self.s_m.my_turn else "Op Turn")
+        #self.s_m.my_turn = self._establish_start()
+        self.my_turn = self._establish_start()
+        #print("My Turn" if self.s_m.my_turn else "Op Turn")
+        print("My Turn" if self.my_turn else "Op Turn")
 
         self.network.init_udp()
 
@@ -209,7 +220,7 @@ class Logic:
             # clear led, reroll
     
     #! maybe merge with initialize
-    def _init_game(self):
+    def _init_game(self, g_mode):
         # setup distance sensor
         self.btns.set_btn_irq(1, None)
         self.btns.set_btn_irq(0, self.btns._end_game_ADC)
@@ -218,16 +229,24 @@ class Logic:
         #! todo impl button to exit network
         # initiate game state
         
-
-        if self.s_m.curr_menu_state == 0:
-            # single player
+        if g_mode == 0:
             self.network_active = False
-            self.s_m.my_turn = 1
-        if self.s_m.curr_menu_state == 1:
-            # multiplayer
+            self.my_turn = 1
+        if g_mode == 1:
             self.conn.init()
+            # my_turn determined in init multiplayer
             self._init_multiplayer()
             self.network_active = True
+
+        # if self.s_m.curr_menu_state == 0:
+        #     # single player
+        #     self.network_active = False
+        #     self.s_m.my_turn = 1
+        # if self.s_m.curr_menu_state == 1:
+        #     # multiplayer
+        #     self.conn.init()
+        #     self._init_multiplayer()
+        #     self.network_active = True
        
 
         self.audio.volume(20)
@@ -345,7 +364,7 @@ class Logic:
         # only generate if it is my turn
         # if not my turn pass and receive
 
-        if self.s_m.my_turn:
+        if self.my_turn:
             self.score.roll_dice(3)
             
             self.led.numbers(self.score.my_nums)
@@ -440,7 +459,7 @@ class Logic:
     def reset_logic(self):
         self.led.stop_timer()
         self.btns.reset_buttons()
-        self.s_m.reset_state()
+        #self.s_m.reset_state()
         self.btns.rst = 0
         #self.network = None
         self.shake.deinitialize()
