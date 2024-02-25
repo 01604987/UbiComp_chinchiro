@@ -7,15 +7,14 @@ class Audio:
         self.player_1 = None
         self.player_0_addr = player_addr_0
         self.player_1_addr = player_addr_1
-        self.module = 1
 
         self.initialize()
     
     def initialize(self):
-        self.player_0 = Dfplayer(self.player_0_addr)
+        if self.player_0_addr:
+            self.player_0 = Dfplayer(self.player_0_addr)
         if self.player_1_addr:
             self.player_1 = Dfplayer(self.player_1_addr)
-            self.modules = 2
 
     def volume(self, volume):
         if self.player_0:
@@ -24,7 +23,8 @@ class Audio:
             self.player_1.volume(volume)
     
     def reset(self):
-        self.player_0.module_reset()
+        if self.player_0:
+            self.player_0.module_reset()
         if self.player_1:
             self.player_1.module_reset()
 

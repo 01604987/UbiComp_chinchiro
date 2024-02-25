@@ -1,6 +1,6 @@
 # forked and modified https://github.com/lavron/micropython-dfplayermini/blob/master/dfplayermini.py
 
-import utime
+#import utime
 from machine import UART, Timer
 
 IDLE = 0
@@ -31,16 +31,16 @@ class Dfplayer:
                        0x00, param1, param2, 0xEF])
         self.uart.write(query)
 
-    def _fade_out_process(self, timer):
-        new_volume = self._volume - self._fadeout_speed
+    # def _fade_out_process(self, timer):
+    #     new_volume = self._volume - self._fadeout_speed
         
-        if new_volume <= 0:
-            print("fadeout finished")
-            new_volume = 0
-            self._fadeout_timer.deinit()
-            self.stop()
-            new_volume = self._max_volume # reset volume to max 
-        self.volume(new_volume)
+    #     if new_volume <= 0:
+    #         print("fadeout finished")
+    #         new_volume = 0
+    #         self._fadeout_timer.deinit()
+    #         self.stop()
+    #         new_volume = self._max_volume # reset volume to max 
+    #     self.volume(new_volume)
 
     # playback
 
@@ -57,32 +57,32 @@ class Dfplayer:
             else:
                 self.cmd(0x0F, param1=folder, param2=track_id)
 
-    def pause(self):
-        self.cmd(0x0E)
+    # def pause(self):
+    #     self.cmd(0x0E)
 
-    def resume(self):
-        self.cmd(0x0D)
+    # def resume(self):
+    #     self.cmd(0x0D)
 
     def stop(self):
         self.cmd(0x16)
 
-    def fadeout(self, fadeout_ms=1000):
-        # more than 500ms and less than 3000ms
-        fadeout_ms = int(sorted([500, fadeout_ms, 3000])[1])
-        fade_out_step_ms = 100
-        self._fadeout_speed = self._volume * \
-            fade_out_step_ms / fadeout_ms  # ten steps per second
-        self._fadeout_timer.init(
-            period=fade_out_step_ms, callback=self._fade_out_process)
+    # def fadeout(self, fadeout_ms=1000):
+    #     # more than 500ms and less than 3000ms
+    #     fadeout_ms = int(sorted([500, fadeout_ms, 3000])[1])
+    #     fade_out_step_ms = 100
+    #     self._fadeout_speed = self._volume * \
+    #         fade_out_step_ms / fadeout_ms  # ten steps per second
+    #     self._fadeout_timer.init(
+    #         period=fade_out_step_ms, callback=self._fade_out_process)
 
-    def loop_track(self, track_id):
-        self.cmd(0x08, param2=track_id)
+    # def loop_track(self, track_id):
+    #     self.cmd(0x08, param2=track_id)
 
-    def loop(self):
-        self.cmd(0x19)
+    # def loop(self):
+    #     self.cmd(0x19)
 
-    def loop_disable(self):
-        self.cmd(0x19, param2=0x01)
+    # def loop_disable(self):
+    #     self.cmd(0x19, param2=0x01)
 
     # volume control
 
