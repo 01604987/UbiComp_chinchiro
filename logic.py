@@ -63,9 +63,11 @@ class Logic:
     def _menu_select(self):
         # on right button press light up different light configs
         # on left button press blink for confirmation
-
         self.btns.set_btn_irq(1, self.btns._step_menu_ADC)
         self.btns.set_btn_irq(0, self.btns._choose_menu_ADC)
+        
+        # put imu to sleep
+        self.shake.deinitialize()
         
         # TODO implement options handling like voice assistance or language?
         # TODO add debug option that activates webrepl
@@ -258,7 +260,8 @@ class Logic:
     def _shaking(self):
         
         #! set button irq for shaking
-        self.shake.initialize_module()
+        #self.shake.initialize_module()
+        self.shake.imu.wake()
         sleep(0.5)
         shake_counter = 0
         while True:
@@ -440,7 +443,6 @@ class Logic:
         self.s_m.reset_state()
         self.btns.rst = 0
         #self.network = None
-        self.shake.reset_values()
         self.shake.deinitialize()
         self.audio.reset()
         self.score.reset_score()

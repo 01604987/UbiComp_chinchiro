@@ -5,12 +5,9 @@ class Shake:
 
     def __init__(self, scl, sda, freq=100000) -> None:
 
-        self.scl = scl
-        self.sda = sda
-        self.freq = freq
-
-        self.i2c = None
-        self.imu = None
+        # self.i2c = None
+        # self.imu = None
+        self.imu = accel(I2C(scl = scl, sda = sda, freq = freq))
 
         self.default_interval = 10000
         # init: [[current val, last val, interval, max val], ...]
@@ -19,21 +16,23 @@ class Shake:
         self.max_set = 0
         
     def deinitialize(self) -> None:
-        if self.imu:
-            self.imu.sleep()
-        self.i2c = None
-        self.imu = None
+        self.reset_values()
+        self.imu.sleep()
+    #     if self.imu:
+    #         self.imu.sleep()
+    #     self.i2c = None
+    #     self.imu = None
         
-    def initialize_module(self) -> None:
-        try:
-            self.i2c = I2C(scl = self.scl, sda = self.sda, freq = self.freq)
-        except Exception as err:
-            print(f"Error during i2c initialization with err code {str(err)}")
+    # def initialize_module(self) -> None:
+    #     try:
+    #         self.i2c = I2C(scl = self.scl, sda = self.sda, freq = self.freq)
+    #     except Exception as err:
+    #         print(f"Error during i2c initialization with err code {str(err)}")
         
-        try:
-            self.imu = accel(self.i2c)
-        except Exception as err:
-            print(f"Error during imu initialization with err code {str(err)}")
+    #     try:
+    #         self.imu = accel(self.i2c)
+    #     except Exception as err:
+    #         print(f"Error during imu initialization with err code {str(err)}")
 
 
     def reset_values(self):
@@ -41,12 +40,14 @@ class Shake:
         self.max_set = 0
     
     def update(self):
-        raw = self.imu.get_values()
-        accel = [0,0,0]
-        accel[0] = raw['AcX']
-        accel[1] = raw['AcY']
-        # because gravity pulls down the z axis
-        accel[2] = raw['AcZ'] - 19000
+        accel = self.imu.get_values()
+        # accel = [0,0,0]
+        # accel[0] = raw['AcX']
+        # accel[1] = raw['AcY']
+        # # because gravity pulls down the z axis
+        # accel[2] = raw['AcZ'] - 19000
+
+        accel[2] = accel[2] - 19000
 
         for index, val in enumerate(self.values):
             # copy current value to last value
@@ -54,7 +55,7 @@ class Shake:
             # update current value with new value
             val[0] = accel[index]
 
-        self.axis = self._detect_axis()
+        self._detect_axis()
         self._calculate_interval()
         self._set_max_val()
 
@@ -75,8 +76,9 @@ class Shake:
         for index, val in enumerate(self.values):
             # value larger than interval then return this axis
             if abs(val[0]) > val[2]:
-                return index
-        return None
+                self.axis = index
+                return
+        self.axis = None
     
     def _set_max_val(self):
         if self.axis == None:

@@ -43,7 +43,7 @@ class Buttons_ADC:
         self.r_btn[2] = 0
         self.r_btn[2] = 0
 
-        self.reset_db_t
+        self.reset_db_t()
 
         self.l_pressed = 0
         self.r_pressed = 0
