@@ -1,8 +1,9 @@
 from machine import Timer, ADC
 from micropython import const
 
-
-_BTNS = const(("left", "right", "top"))
+# 0 = left, 1 = right, 2 = top
+#_BTNS = const(("left", "right", "top"))
+#_BTNS = const((0, 1, 2))
         
 class Buttons_ADC:
 
@@ -16,7 +17,6 @@ class Buttons_ADC:
         self.t_btn = [0, 0, 0]
 
         self.db_t = None
-        self.db_t_active = 0
 
         self.l_pressed = 0
         self.r_pressed = 0
@@ -29,7 +29,6 @@ class Buttons_ADC:
             return
         if not self.db_t:
             self.db_t = Timer(0)
-            #! db_t_active needs to be reset within custom_function
             self.db_t.init(mode = Timer.ONE_SHOT, period = 30, callback = lambda t: func(t))
     
     def reset_db_t(self) -> None:
@@ -50,11 +49,11 @@ class Buttons_ADC:
         self.r_pressed = 0
         #self.hold = 0
         
-    def set_btn_irq(self, button, func) -> None:
-        try:
-            btn = self._check_instance(button)
-        except ValueError as err:
-            print(f"invalid button")
+    def set_btn_irq(self, btn, func) -> None:
+        # try:
+        #     btn = self._check_instance(button)
+        # except ValueError as err:
+        #     print(f"invalid button")
         
         if btn == 0:
             self.l_btn[2] = func
@@ -64,25 +63,25 @@ class Buttons_ADC:
             self.t_btn[2] = func
 
 
-    def _check_instance(self, button) -> int:
-        if isinstance(button, str):
-            try:
-                return _BTNS.index(button)
-            except ValueError as err:
-                print(f"Button name not defined. Error: {str(err)}")
+    # def _check_instance(self, button) -> int:
+    #     if isinstance(button, str):
+    #         try:
+    #             return _BTNS.index(button)
+    #         except ValueError as err:
+    #             print(f"Button name not defined. Error: {str(err)}")
 
-        if isinstance(button, int):
-            if button >= len(_BTNS):
-                raise ValueError
-            return button
+    #     if isinstance(button, int):
+    #         if button >= len(_BTNS):
+    #             raise ValueError
+    #         return button
         
-        raise ValueError
+    #     raise ValueError
 
-    def check_btn_val(self, button):
-        try:
-            btn = self._check_instance(button)
-        except ValueError as err:
-            print(f"invalid button")
+    def check_btn_val(self, btn):
+        # try:
+        #     btn = self._check_instance(button)
+        # except ValueError as err:
+        #     print(f"invalid button")
         
         if btn == 0:
             return self.buttons.read() >= self.l_btn[0] and self.buttons.read() <= self.l_btn[1]
@@ -143,13 +142,12 @@ class Buttons_ADC:
         self.reset_db_t()
     
     def _end_game_ADC(self, t):
-        if self.check_btn_val("left"):
-            print(f"Ending current game")
+        if self.check_btn_val(0):
             self.hold = 1
             self.rst = 1
     
     def _distance_sim(self, t):
-        if self.check_btn_val("right"):
+        if self.check_btn_val(1):
             print(f"distance static")
             self.hold = 1
             self.is_static = not self.is_static

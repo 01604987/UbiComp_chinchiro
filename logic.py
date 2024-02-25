@@ -64,8 +64,8 @@ class Logic:
         # on right button press light up different light configs
         # on left button press blink for confirmation
 
-        self.btns.set_btn_irq("right", self.btns._step_menu_ADC)
-        self.btns.set_btn_irq("left", self.btns._choose_menu_ADC)
+        self.btns.set_btn_irq(1, self.btns._step_menu_ADC)
+        self.btns.set_btn_irq(0, self.btns._choose_menu_ADC)
         
         # TODO implement options handling like voice assistance or language?
         # TODO add debug option that activates webrepl
@@ -209,8 +209,8 @@ class Logic:
     #! maybe merge with initialize
     def _init_game(self):
         # setup distance sensor
-        self.btns.set_btn_irq("right", None)
-        self.btns.set_btn_irq("left", self.btns._end_game_ADC)
+        self.btns.set_btn_irq(1, None)
+        self.btns.set_btn_irq(0, self.btns._end_game_ADC)
         self.distance.initialize()
 
 
