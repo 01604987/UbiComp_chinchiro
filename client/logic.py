@@ -142,6 +142,7 @@ class Logic:
 
     #! HANDLE ECONRESET
     def _init_multiplayer(self):
+        self.led.start_loading(300)
         while not self.conn.connect():
             print('connecting to wifi')
             self._poll_btns()
@@ -165,6 +166,7 @@ class Logic:
             sleep(1)
         print("socket established")
         print(self.network.server_ip)
+        self.led.stop_loading()
         self.s_m.my_turn = self._establish_start()
         print("My Turn" if self.s_m.my_turn else "Op Turn")
 
@@ -421,7 +423,7 @@ class Logic:
         else: raise EndGame
 
     def reset_logic(self):
-
+        self.led.stop_loading()
         self.btns.reset_buttons()
         self.s_m.reset_state()
         self.btns.rst = 0

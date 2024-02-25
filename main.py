@@ -63,13 +63,17 @@ _TRIGGER = const(0)
 _ECHO = const(16)
 
 
+###### NeoPixel ######
+p_pin = Pin(4)
+_P_NR = const(21)
+
 
 # init classes
 
 #buttons = Buttons(None, left_btn, right_btn)
 buttons = Buttons_ADC(_T_BTN, _L_BTN, _R_BTN)               
 state = State()
-led = Led()
+led = Led(p_pin, _P_NR)
 # _UART_1 first because this address is not bound to USB repl and can safely be used. When reenable repl, can simply leave out second param.
 #audio = Audio(_UART_1, _UART_0)
 audio = Audio(_UART_1)
