@@ -69,16 +69,16 @@ class HCSR04:
         mm = pulse_time * 100 // 582
         return mm
 
-    def distance_cm(self):
-        """
-        Get the distance in centimeters with floating point operations.
-        It returns a float
-        """
-        pulse_time = self._send_pulse_and_wait()
+    # def distance_cm(self):
+    #     """
+    #     Get the distance in centimeters with floating point operations.
+    #     It returns a float
+    #     """
+    #     pulse_time = self._send_pulse_and_wait()
 
-        # To calculate the distance we get the pulse_time and divide it by 2 
-        # (the pulse walk the distance twice) and by 29.1 becasue
-        # the sound speed on air (343.2 m/s), that It's equivalent to
-        # 0.034320 cm/us that is 1cm each 29.1us
-        cms = (pulse_time / 2) / 29.1
-        return cms
+    #     # To calculate the distance we get the pulse_time and divide it by 2 
+    #     # (the pulse walk the distance twice) and by 29.1 becasue
+    #     # the sound speed on air (343.2 m/s), that It's equivalent to
+    #     # 0.034320 cm/us that is 1cm each 29.1us
+    #     cms = (pulse_time / 2) / 29.1
+    #     return cms

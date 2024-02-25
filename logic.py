@@ -211,7 +211,6 @@ class Logic:
         # setup distance sensor
         self.btns.set_btn_irq(1, None)
         self.btns.set_btn_irq(0, self.btns._end_game_ADC)
-        self.distance.initialize()
 
 
         #! todo impl button to exit network
