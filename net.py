@@ -36,7 +36,6 @@ class Server:
         self.server_udp = None
         self.client_tcp = None
         self.client_tcp_address = None
-        self.connected_tcp = False
 
     def init_tcp(self):
         # Create a TCP/IP socket
@@ -70,7 +69,6 @@ class Server:
             self.server_udp.close()
     
     def deinit_tcp(self):
-        self.connected_tcp = False
         if self.client_tcp:
             self.client_tcp.close()
         self.client_tcp_address = None
@@ -89,8 +87,6 @@ class Server:
                 while not (data:= self.receive_tcp_data()):
                     pass
                 print(data)
-                if data == 10:
-                    self.connected_tcp = True
                 return 1
             except OSError as err:
                 if err.errno != errno.EAGAIN:

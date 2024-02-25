@@ -23,14 +23,14 @@ class Score:
      
     def __init__(self) -> None:
         # index 0 = my_score, index 1 = op_score
-        self.score = [0, 0]
+        #self.score = [0, 0]
         self.my_nums = []
         self.op_nums = []
 
 
     def reset_score(self):
-        self.score.clear()
-        self.score.extend((0, 0))
+        #self.score.clear()
+        #self.score.extend((0, 0))
         self.my_nums.clear()
         self.op_nums.clear()
 
@@ -64,30 +64,31 @@ class Score:
         if num[0] == num[1]:
             # check for zorome
             if num[0] == num[2]:
-                self.score[player] = int(''.join(map(str, num)))
+                return int(''.join(map(str, num)))
+                #self.score[player] = int(''.join(map(str, num)))
             # hit is last number
             else:
-                self.score[player] = num[2]
-            return
+                #self.score[player] = num[2]
+                return num[2]
         
         # check for hit
         if num[1] == num[2]:
             # hit is first number
-            self.score[player] = num[0]
-            return
+            #self.score[player] = num[0]
+            return num[0]
         
         if num[0] == 4 and num[1] == 5 and num[2] == 6:
-            self.score[player] = 7
-            return
+            #self.score[player] = 7
+            return 7
 
         # check for hifumi
         if num[0] == 1 and num[1] == 2 and num[2] == 3:
-            self.score[player] = -1
-            return
+            # self.score[player] = -1
+            return -1
         # else no hit
         else:
-            self.score[player] = 0
-            return
+            # self.score[player] = 0
+            return 0
 
     def list_to_nums(self):
         concat_nums = ''.join(map(str, self.my_nums))

@@ -1,17 +1,13 @@
 import socket
 import errno
 
-
-
 class Client:
 
     def __init__(self, ip, port) -> None:
         self.server_ip = ip
         self.server_tcp_port = port
-        self.server_udp_port = port + 1
         self.client_tcp = None
         self.client_udp = None
-        self.connected_tcp = False
 
     def init_tcp(self):
         self.client_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,7 +24,6 @@ class Client:
             else:
                 raise
     def deinit_tcp(self):
-        self.connected_tcp = False
         self.client_tcp.close()
 
     def deinit_udp(self):
@@ -55,7 +50,7 @@ class Client:
             print(data)
             
             if data == 10:
-                self.connected_tcp = True
+                print('connected')
             self.send_tcp_data(10)
             return 1
         except OSError as err:

@@ -112,7 +112,8 @@ class Logic:
                     
                     gc.collect()
                     # self.s_m.my_turn = 1 if my turn. self.score.score[1] is op_score.
-                    if self.score.score[not self.s_m.my_turn]:
+                    #if self.score.score[not self.s_m.my_turn]:
+                    if self.score.check_score(not self.s_m.my_turn):
                         print("Ending turn")
                         break
                 except EndGame:
@@ -124,12 +125,12 @@ class Logic:
             
             # op_nums none during single player
             if self.score.my_nums and self.score.op_nums:
-                # calculate winner 
+                # calculate winner & display blinking
                 self._calculate_winner()
                 # display score
                 # speak out score
 
-                sleep(3)
+                sleep(4)
                 # flush all nums and scores
                 self.score.reset_score()
 
@@ -166,7 +167,7 @@ class Logic:
             sleep(1)
         print("socket established")
         print(self.network.server_ip)
-        self.led.stop_loading()
+        self.led.stop_timer()
         self.s_m.my_turn = self._establish_start()
         print("My Turn" if self.s_m.my_turn else "Op Turn")
 
@@ -271,7 +272,7 @@ class Logic:
                 print(f"here wiht err {err}")
  
             # detect axis being shaken
-            axis = self.shake.get_axis()
+            axis = self.shake.axis
             
             if axis == None:
                 # DEBUG
@@ -346,8 +347,12 @@ class Logic:
         if self.s_m.my_turn:
             self.score.roll_dice(3)
             
+            self.led.numbers(self.score.my_nums)
+
             # check if numbers clears table
             self.score.check_score(0)
+            
+            sleep(3)
 
             # if multiplayer
             if self.network_active:
@@ -363,50 +368,59 @@ class Logic:
                 self._poll_btns()
                 print("listening")
                 sleep(0.1)
+            # not my turn, I play loading during result
+            self.led.stop_timer()
             if op_nums == 14:
                 raise EndGame
             print("Opponent rolled: ", op_nums)
             self.score.nums_to_list(op_nums)
-            self.score.check_score(1)
+            self.led.numbers(self.score.op_nums)
             # send ack of package
             self.network.send_tcp_data(11)
+            sleep(3)
             
 
     def _calculate_winner(self):
-        if self.score.score[0] > self.score.score[1]:
-            print('red', self.score.my_nums, 'score: ', self.score.score[0])
+        if self.score.check_score(0) > self.score.check_score(1):
             # if my_win : red display my_num
-        elif self.score.score[0] < self.score.score[1]:
+            print('red', self.score.my_nums)
+            self.led.start_blinking(self.score.my_nums, interval_ms = 500)
+
+        elif self.score.check_score(0) < self.score.check_score(1):
             # if op_win : blue display op_num
-            print('blue', self.score.op_nums, 'score: ', self.score.score[1])
+            print('blue', self.score.op_nums)
+            self.led.start_blinking(self.score.op_nums, col = 2, interval_ms = 500)
+
         else:
             # can both be no hit = same score
-            print('red', self.score.my_nums, 'score: ', self.score.score[0], 'blue', self.score.op_nums, 'score: ', self.score.score[1])
+            print('red', self.score.my_nums, 'blue', self.score.op_nums)
             # alternate blinking red, blue
+            self.led.start_blinking(self.score, num1 = self.score.my_nums, num2 = self.score.op_nums, col = 2, interval_ms = 500)
 
-    def _change_turns(self):
-        if self.network_active:
-            if self.s_m.my_turn:
-                # send turn end signal
-                self.network.send_tcp_data(12)
-                # await ack
-                self.wait_for_ack()
+
+    # def _change_turns(self):
+    #     if self.network_active:
+    #         if self.s_m.my_turn:
+    #             # send turn end signal
+    #             self.network.send_tcp_data(12)
+    #             # await ack
+    #             self.wait_for_ack()
             
-            else:
-                while not (code := self.network.receive_tcp_data()):
-                    print('waiting for turn end')
-                    self._poll_btns()
-                    sleep(0.1)
-                if code == 14:
-                    raise EndGame
-                # turn end
-                elif code == 12:
-                    pass
-                print(code)
-                #self.score.reset_score()
-                self.network.send_tcp_data(11)
+    #         else:
+    #             while not (code := self.network.receive_tcp_data()):
+    #                 print('waiting for turn end')
+    #                 self._poll_btns()
+    #                 sleep(0.1)
+    #             if code == 14:
+    #                 raise EndGame
+    #             # turn end
+    #             elif code == 12:
+    #                 pass
+    #             print(code)
+    #             #self.score.reset_score()
+    #             self.network.send_tcp_data(11)
 
-            self.s_m.my_turn = not self.s_m.my_turn
+    #         self.s_m.my_turn = not self.s_m.my_turn
 
     def _poll_btns(self):
         self.btns.poll_adc()
@@ -423,7 +437,7 @@ class Logic:
         else: raise EndGame
 
     def reset_logic(self):
-        self.led.stop_loading()
+        self.led.stop_timer()
         self.btns.reset_buttons()
         self.s_m.reset_state()
         self.btns.rst = 0

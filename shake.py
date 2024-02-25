@@ -1,6 +1,5 @@
 from lib.mpu6050 import accel
 from machine import I2C
-import time
 
 class Shake:
 
@@ -36,9 +35,6 @@ class Shake:
         except Exception as err:
             print(f"Error during imu initialization with err code {str(err)}")
 
-
-    def get_axis(self):
-        return self.axis
 
     def reset_values(self):
         self.values = [[-1,-1,self.default_interval, -1],[-1,-1,self.default_interval, -1],[-1,-1,self.default_interval, -1]]
