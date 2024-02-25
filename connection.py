@@ -1,4 +1,4 @@
-import network
+from network import WLAN, STA_IF
 from micropython import const
 from time import ticks_ms
 
@@ -11,7 +11,7 @@ class Connection:
         self.conn_t = const(0)
 
     def init(self):
-            self.net = network.WLAN(network.STA_IF)
+            self.net = WLAN(STA_IF)
             self.net.active(True)
             self.net.ifconfig((self.ip, '255.255.255.0', '192.168.1.1', '8.8.8.8'))
 
@@ -24,10 +24,10 @@ class Connection:
         if not self.net.isconnected():
             if ticks_ms() - self.conn_t > threshold:
                 self.net.connect(self.ssid, self.password)
-                self.conn_t = ticks_ms()
+                self.conn_t = const(ticks_ms())
             return 0
         else:
-            self.conn_t = 0
+            self.conn_t = const(0)
             return 1
 
         
