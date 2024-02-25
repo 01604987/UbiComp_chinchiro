@@ -53,7 +53,29 @@ Setting the volume level onto the DFplayer can result in delays, therefore, it i
 On some occasions, the DFplayer may hang up and stop receiving write commands. This may be solvable [via software](https://reprage.com/posts/2018-05-08-dfplayer-mini-cheat-sheet/), however, it might be easier to include a switch to cut and connect the vcc on the DFplayer mini. This can also be used as a mute switch.
 
 ## Buttons
-TODO What button type, how many, what do they do
+
+We will be using keyboard switches, specifically of the Gateron type for our Interface of the Dice faces.
+
+Key switches, such as those found in mechanical keyboards, differ from classical electronic buttons in several ways, primarily in their construction, 
+feel, and actuation mechanism.
+
+**Construction:** Key switches are typically made up of several components, including a stem, housing, spring, and electrical contacts. 
+When a key is pressed, the stem pushes down on the spring, compressing it and closing the electrical contacts, which registers a keystroke.
+
+**Actuation Mechanism:** Key switches can use various actuation mechanisms to register keystrokes. For example, in mechanical switches, 
+the stem physically pushes down on a metal contact, whereas in membrane switches, the stem compresses a rubber dome, which then makes contact 
+with a circuit underneath.
+
+#### Button Functionality for Menu Interaction
+Pressing right button = cycle through menu
+Pressing left button = confirm menu select
+Once confirmed selection =
+game loop start
+In Game loop:
+Pressing right button = cycle through led color
+Pressing left button = end game
+End game returns back to menu select
+
 ### Limitation, Problems & Solutions
 Unfortunately the nodemcu ESP8266 comes with a variety of limitations regarding Pin state, GPIO input and output. Information can be taken from here: <br>
 https://lastminuteengineers.com/esp8266-pinout-reference/ <br>
