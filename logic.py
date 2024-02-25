@@ -128,8 +128,6 @@ class Logic:
                     err_type = type(err).__name__
                     err_msg = str(err)
                     print(f"Exception in game: {err_type} with message: {err_msg}")
-                    # Optionally, re-raise the error with additional context or simply log it.
-                    raise Exception(f"{err_type} in _game: {err_msg}")
 
                 
             
@@ -338,6 +336,7 @@ class Logic:
                     #! set audio volume
                     
                     #! change led dice
+                    self.led.numbers(self.score.roll_dice(3))
 
                     # play the correct audio with correct audio channel
                     # left, right, up, down based on axis.
@@ -354,7 +353,7 @@ class Logic:
                     #! start vibration
                         
                     #! send udp package
-                    #sleep(0.05)
+                    sleep(0.08)
             
             except Exception as err:
                 print(f"Exception during shaking with err code {str(err)}")

@@ -43,7 +43,7 @@ class Score:
                 self.my_nums.append(rand % 6 + 1)
                 counter += 1
             if counter > dice:
-                break
+                return self.my_nums
 
 
     def check_score(self, player) -> int:

@@ -4,9 +4,9 @@ from machine import Timer
 
 
 #               "red",   "green",   "blue",    "yellow",   "purple", "turkoise"
-LIGHTS = const(((3,0,0), (0,3,0), (0,0,3), (2,2,0), (2,0,2), (0,2,2)))
-NUMS = [[], [3], [0, 6], [2, 3, 4], [0, 2, 4, 6], [0, 2, 3, 4, 6], [0, 1, 2, 4, 5, 6]]
-LOADING = const((15, 17, 19, 5, 3, 1))
+_LIGHTS = const(((3,0,0), (0,3,0), (0,0,3), (2,2,0), (2,0,2), (0,2,2)))
+_NUMS = [[], [3], [0, 6], [2, 3, 4], [0, 2, 4, 6], [0, 2, 3, 4, 6], [0, 1, 2, 4, 5, 6]]
+_LOADING = const((15, 17, 19, 5, 3, 1))
 
 class Led:
 
@@ -15,7 +15,7 @@ class Led:
         self.sleep_time_ms = 1000
         self.timer = None
         self.step = 0
-        self.col = LIGHTS[0]
+        self.col = _LIGHTS[0]
 
     def reset(self) -> None:
         self.np.fill((0, 0, 0))
@@ -32,19 +32,19 @@ class Led:
         if not col:
             col = self.col
         else:
-            col = LIGHTS[col]
+            col = _LIGHTS[col]
 
         for i, val in enumerate(num):
             offset = i * int(len(self.np)/ 3)
-            for i in NUMS[val]:
+            for i in _NUMS[val]:
                 self.np[i + offset] = col
         
         self.np.write()
 
     # TODO change/add to pingpong animation
     def display_loading(self, t):
-        self.np[LOADING[self.step % 6]] = LIGHTS[4]
-        self.np[LOADING[(self.step - 1) % 6]] = (0, 0, 0)
+        self.np[_LOADING[self.step % 6]] = _LIGHTS[4]
+        self.np[_LOADING[(self.step - 1) % 6]] = (0, 0, 0)
         self.step += 1
         self.np.write()
 
