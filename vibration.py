@@ -19,7 +19,6 @@ class Vibration:
         self.pwm0.duty(0)
 
     def vibrate(self, motor, strength = None):
-
         self.pwm0.duty(0)
         if motor == 0:
             self.s0.value(0)
@@ -45,8 +44,8 @@ class Vibration:
 
 
     def map_strength_to_duty(self, strength):
-        if not strength:
-            return 400
+        if strength is None:
+            return 300
         # clamp between 8k & 30k
         strength = max(8000, min(abs(strength), 30000))
 
@@ -58,6 +57,7 @@ class Vibration:
         #y = ((x - a) / (b - a)) * (d - c) + c
 
         duty = int(((strength - 8000) / (22000)) * (500) + 400)
+        print(duty)
         return duty
 
 
