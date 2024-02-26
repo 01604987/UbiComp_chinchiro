@@ -2,6 +2,7 @@ import socket
 import errno
 from select import select
 from micropython import const
+from struct import pack, unpack
 
 ###################################################################
 ############### TCP CODES ################
@@ -126,8 +127,8 @@ class Server:
             print('Received: ', data)
         return data
     
-    def send_udp_data(self, data):
-        data = data.to_bytes(2, 'big')
+    def send_udp_shake(self, max_val, axis):
+        data = pack('>hB', max_val, axis)
         try:
             # Attempt to send data to the UDP socket
             self.server_udp.sendto(data, (self.client_tcp_address[0], self.server_tcp_port + 1))
@@ -136,10 +137,15 @@ class Server:
             print(e)
             raise
 
-    def receive_udp_data(self):
+    
+    def receive_udp_shake(self):
         try:
-            data = self.server_udp.recv(2)
-            return data
+            data = self.server_udp.recv(3)
+            if data:
+                max_val, axis = unpack('>hB', data)
+            
+                return (max_val, axis)
+            return None
         except OSError as err:
             if err.errno == errno.EAGAIN:
                 return None

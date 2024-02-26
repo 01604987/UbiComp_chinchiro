@@ -56,7 +56,7 @@ class Logic:
                 print("Ending Game")
                 sleep(0.1)
                 if self.network_active:
-                    print("sending end game over tcp")
+                    #print("sending end game over tcp")
                     self.network.send_tcp_data(14)
                     sleep(2)
                 self.reset_logic()
@@ -100,19 +100,31 @@ class Logic:
                     #self.s_m.set_game_state("shaking")
                     if self.my_turn:
                         self._shaking()
-                        self.network.send_tcp_data(16)
+                        if self.network_active:
+                            self.network.send_tcp_data(16)
                     # will never reach if not networked
                     if not self.my_turn:
 ########################################################################################################################################################
                         last_t = ticks_ms()
                         while True:
+                            self._poll_btns()
                             # check udp
                             # imu max val, axis
                             # if max val abs < 10 = microshake: play microshake, keep polling stop playing microshake if max val rises.
-                            data = self.network.receive_udp_data()
+                            data = self.network.receive_udp_shake()
                             if data is not None:
                                 last_t = ticks_ms()
                                 print(data)
+                                if abs(data[0]) <= 1:
+                                    self._map_vib_motor(data[1], data[0] , 1)
+                                else:
+                                    self._map_vib_motor(data[1], data[0])
+                                    # roll dice for opponent to display random dices
+                                    self.led.numbers(self.score.roll_dice(3, 1))
+                                    if data[0] < 0:
+                                        self.audio.play(0)
+                                    else:
+                                        self.audio.play(1)
                                 # do led
                                 # do vibration
                                 # do audio
@@ -188,7 +200,7 @@ class Logic:
             # allow end game/break
             sleep(1)
 
-        print("connected to wifi")
+        #print("connected to wifi")
         print(self.conn.net.ifconfig())
         try:
             self.network.init_tcp()
@@ -203,7 +215,7 @@ class Logic:
             # allow end game/break
             sleep(1)
         print("socket established")
-        print(self.network.client_tcp_address)
+        #print(self.network.server_ip)
         self.led.stop_timer()
         #self.s_m.my_turn = self._establish_start()
         self.my_turn = self._establish_start()
@@ -361,7 +373,8 @@ class Logic:
                         self._map_vib_motor(axis, self.shake.values[axis][3], 1)
                         
 
-
+                        if self.network_active:
+                            self.network.send_udp_shake(min(max(-1, self.shake.values[axis][3]), 1), axis)
 
                         last_t = ticks_ms()
                         self.shake.values[axis][3] = 0
@@ -377,7 +390,7 @@ class Logic:
                     
                     
                     if self.network_active:
-                        self.network.send_udp_data(shake_counter)
+                        self.network.send_udp_shake(self.shake.values[axis][3], axis)
 
                     #! calculate magnitude
 
@@ -541,7 +554,7 @@ class Logic:
     def wait_for_ack(self):
         while not (ack := self.network.receive_tcp_data()):
             sleep(0.1)
-            print('waiting for ack')
+            #print('waiting for ack')
             self._poll_btns()
         if ack == 11:
             pass

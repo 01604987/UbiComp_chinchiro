@@ -1,6 +1,7 @@
 import socket
 import errno
 from select import select
+from struct import pack, unpack
 
 
 class Client:
@@ -94,20 +95,24 @@ class Client:
             print('Received: ', data)
         return data
 
-    def receive_udp_data(self):
-        try:
-            data = self.client_udp.recv(2)
-            return data
-        except OSError as err:
-            if err.errno == errno.EAGAIN:
-                return None
 
-    def send_udp_data(self, data):
-        data = data.to_bytes(2, 'big')
+    def send_udp_shake(self, max_val, axis):
+        data = pack('>hB', max_val, axis)
         try:
-            # Attempt to send data to the UDP socket
+            # sending 2 bytes for max_val and 1 byte for axis (smallest represntable data size)
             self.client_udp.sendto(data, (self.server_ip, self.server_tcp_port + 1))
-            
         except OSError as e:
             print(e)
             raise
+    
+    def receive_udp_shake(self):
+        try:
+            data = self.client_udp.recv(3)
+            if data:
+                max_val, axis = unpack('>hB', data)
+            
+                return (max_val, axis)
+            return None
+        except OSError as err:
+            if err.errno == errno.EAGAIN:
+                return None

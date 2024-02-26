@@ -1,6 +1,6 @@
+from logic import Logic
 from machine import Pin
 from buttons_adc import Buttons_ADC
-from logic import Logic
 from led_manager import Led
 from audio import Audio
 from shake import Shake

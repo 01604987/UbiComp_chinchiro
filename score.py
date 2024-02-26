@@ -32,18 +32,19 @@ class Score:
         self.op_nums.clear()
 
     
-    def roll_dice(self, dice):
+    def roll_dice(self, dice, op = None):
         # random 3 numbers
-        self.my_nums.clear()
+        
+        self.my_nums.clear() if not op else self.op_nums.clear()
         counter = 1
         while True:
             rand = random.getrandbits(4)
 
             if rand < 12:
-                self.my_nums.append(rand % 6 + 1)
+                self.my_nums.append(rand % 6 + 1) if not op else self.op_nums.append(rand % 6 +1)
                 counter += 1
             if counter > dice:
-                return self.my_nums
+                return self.my_nums if not op else self.op_nums
 
 
     def check_score(self, player) -> int:
