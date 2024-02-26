@@ -13,7 +13,8 @@ class Audio:
     def initialize(self):
         if self.player_0_addr:
             self.player_0 = Dfplayer(self.player_0_addr)
-        if self.player_1_addr:
+            #because uart_0 addr == 0
+        if self.player_1_addr == 0:
             self.player_1 = Dfplayer(self.player_1_addr)
 
     def volume(self, volume):
