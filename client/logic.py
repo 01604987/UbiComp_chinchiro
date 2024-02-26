@@ -364,20 +364,20 @@ class Logic:
                     if self.shake.values[axis][3] > 0:
                         if axis == 0:
                             # vibrate on positive X axis
-                            self.vib.vibrate(3)
+                            self.vib.vibrate(3, self.shake.values[axis][3])
                         if axis == 1:
                             pass
                         if axis == 2:
                             # vibrate on positive Z axis
-                            self.vib.vibrate(0)
+                            self.vib.vibrate(0, self.shake.values[axis][3])
 
                     if self.shake.values[axis][3] < 0:
                         if axis == 0:
-                            self.vib.vibrate(2)
+                            self.vib.vibrate(2, self.shake.values[axis][3])
                         if axis == 1:
                             pass
                         if axis == 2:
-                            self.vib.vibrate(1)
+                            self.vib.vibrate(1, self.shake.values[axis][3])
                     #! send udp package
                     
                     self.shake.values[axis][3] = 0
