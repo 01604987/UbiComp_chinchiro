@@ -8,7 +8,7 @@
 # from micropython import const, mem_info
 from score import Score
 from vibration import Vibration
-from time import sleep
+from time import sleep, ticks_ms
 import gc
 
 
@@ -102,9 +102,31 @@ class Logic:
                         self._shaking()
 
                     if not self.my_turn:
+########################################################################################################################################################
+                        last_t = ticks_ms()
+                        while True:
+                            # check udp
+                            # imu max val, axis
+                            # if max val abs < 10 = microshake: play microshake, keep polling stop playing microshake if max val rises.
+                            data = self.network.receive_udp_data()
+                            if data is not None:
+                                last_t = ticks_ms()
+                                print(data)
+                                # do led
+                                # do vibration
+                                # do audio
+
+                            # after 3 sec of no data -> check tcp
+                            if ticks_ms() - last_t >= 3000:
+                                print("checking tcp")
+                                last_t = ticks_ms()
+                                end = self.network.receive_tcp_data()
+                                if end:
+                                    print(end)
+                                    break
+
                         # check udp, check tcp in loop
                         # if got tcp message break out of loop/ return from loop
-                        pass
 
                     gc.collect()
                     #self.s_m.set_game_state("result")
@@ -282,19 +304,18 @@ class Logic:
         self.shake.imu.wake()
         sleep(0.5)
         shake_counter = 0
+        last_t = ticks_ms()
+        in_m = 0
         while True:
             self._poll_btns()
             # poll accel values
-            try:
-                self.shake.update()
-            except Exception as err:
-                print(f"here wiht err {err}")
- 
+
+            self.shake.update()
+
             # detect axis being shaken
             axis = self.shake.axis
             
             if axis == None:
-                # DEBUG
                 # TODO add button to for simulating distance sensor
                 if self.distance.static() and shake_counter != 0:
                     print("Ending shaking")
@@ -323,12 +344,33 @@ class Logic:
             try:
                 if sign_inverse <= 0:
                     
+                    self.led.numbers(self.score.roll_dice(3))
+
+                    if ticks_ms() - last_t <= 150:
+                        print('in microshake')
+                        self.audio.volume(10)
+                        
+                        if not in_m:
+                            self.audio.play(16)
+                        in_m = 1
+                        self._map_vib_motor(axis, self.shake.values[axis][3], 1)
+                        
+
+
+
+                        last_t = ticks_ms()
+                        self.shake.values[axis][3] = 0
+                        continue
+                    in_m = 0
+                    # not play sound
+                    # not give strength a consideration for vibration
+                    
                     print(axis)
                     shake_counter += 1
                     if shake_counter % 6 == 0:
                         self.audio.volume(20)
-                    # reset max value
-                    self.shake.values[axis][3] = 0
+                    
+                    
                     if self.network_active:
                         self.network.send_udp_data(shake_counter)
 
@@ -337,51 +379,65 @@ class Logic:
                     #! set audio volume
                     
                     #! change led dice
-                    self.led.numbers(self.score.roll_dice(3))
+
 
                     # play the correct audio with correct audio channel
                     # left, right, up, down based on axis.
                     # if axis == 0 and values[0][0] <= 0 -> left
                     # axis == 1 ? -> diagonal or left, right, up, down
 
+
+
                     #! play audio
                     if self.shake.values[axis][0] <= 0:
-                        print("left")
+                        print("Audio right")
                         self.audio.play(0)
                     else:
-                        print("right")
+                        print("Audio left")
                         self.audio.play(1)
                     #! start vibration
                         
-                    # positve max val at axis means the shake should have come from that direction
-                        
-                    # take max value from last shake
-                    # which is sign inverted from current val since shake detection is based on
-                    # max val divided by current val. if result negative => shake
-                    # if the max val is positive -> meaning we moved based on mpu view, to the positive axis
-                    # -> a shake would then reverse the direction, leading to a vibration on the revering point, which is positive axis
-                    if self.shake.values[axis][3] > 0:
-                        if axis == 0:
-                            # vibrate on positive X axis
-                            self.vib.vibrate(3)
-                        if axis == 1:
-                            pass
-                        if axis == 2:
-                            # vibrate on positive Z axis
-                            self.vib.vibrate(0)
+                    self._map_vib_motor(axis, self.shake.values[axis][3])
 
-                    if self.shake.values[axis][3] < 0:
-                        if axis == 0:
-                            self.vib.vibrate(2)
-                        if axis == 1:
-                            pass
-                        if axis == 2:
-                            self.vib.vibrate(1)
-                    #! send udp package
+                    # reset max value
+                    self.shake.values[axis][3] = 0
+                    last_t = ticks_ms()
                     sleep(0.08)
             
             except Exception as err:
                 print(f"Exception during shaking with err code {str(err)}")
+
+    def _map_vib_motor(self, axis, max_str, m = None):
+            # positve max val at axis means the shake should have come from that direction
+                
+            # take max value from last shake
+            # which is sign inverted from current val since shake detection is based on
+            # max val divided by current val. if result negative => shake
+            # if the max val is positive -> meaning we moved based on mpu view, to the positive axis
+            # -> a shake would then reverse the direction, leading to a vibration on the revering point, which is positive axis
+
+            if max_str > 0:
+                if m:
+                    max_str = None
+                if axis == 0:
+                    # vibrate on positive X axis
+                    self.vib.vibrate(3, max_str)
+                if axis == 1:
+                    pass
+                if axis == 2:
+                    # vibrate on positive Z axis
+                    self.vib.vibrate(0, max_str)
+
+            elif max_str < 0:
+                if m:
+                    max_str = None
+                if axis == 0:
+                    self.vib.vibrate(2, max_str)
+                if axis == 1:
+                    pass
+                if axis == 2:
+                    self.vib.vibrate(1, max_str)
+            #! send udp package
 
     def _result(self):
         # random 3 numbers

@@ -102,9 +102,31 @@ class Logic:
                         self._shaking()
 
                     if not self.my_turn:
+########################################################################################################################################################
+                        last_t = ticks_ms()
+                        while True:
+                            # check udp
+                            # imu max val, axis
+                            # if max val abs < 10 = microshake: play microshake, keep polling stop playing microshake if max val rises.
+                            data = self.network.receive_udp_data()
+                            if data is not None:
+                                last_t = ticks_ms()
+                                print(data)
+                                # do led
+                                # do vibration
+                                # do audio
+
+                            # after 3 sec of no data -> check tcp
+                            if ticks_ms() - last_t >= 3000:
+                                print("checking tcp")
+                                last_t = ticks_ms()
+                                end = self.network.receive_tcp_data()
+                                if end:
+                                    print(end)
+                                    break
+
                         # check udp, check tcp in loop
                         # if got tcp message break out of loop/ return from loop
-                        pass
 
                     gc.collect()
                     #self.s_m.set_game_state("result")
@@ -288,16 +310,13 @@ class Logic:
         while True:
             self._poll_btns()
             # poll accel values
-            try:
-                self.shake.update()
-            except Exception as err:
-                print(f"here wiht err {err}")
- 
+
+            self.shake.update()
+
             # detect axis being shaken
             axis = self.shake.axis
             
             if axis == None:
-                # DEBUG
                 # TODO add button to for simulating distance sensor
                 if self.btns.is_static and shake_counter != 0:
                     print("Ending shaking")
