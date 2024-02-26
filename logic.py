@@ -7,6 +7,7 @@
 # from net import Server
 # from micropython import const, mem_info
 from score import Score
+from vibration import Vibration
 from time import sleep
 import gc
 
@@ -29,6 +30,7 @@ class Logic:
         self.distance = distance
         self.score = Score()
         self.conn = conn
+        self.vib = Vibration()
         self.my_turn = 0
 
     # def __init__(self, btns:Buttons_ADC, s_m:State, led:Led , audio: Audio ,network: Server = None, shake: Shake = None, distance: Distance = None, vibration = None, conn:Connection = None) -> None:
@@ -351,6 +353,30 @@ class Logic:
                         self.audio.play(1)
                     #! start vibration
                         
+                    # positve max val at axis means the shake should have come from that direction
+                        
+                    # take max value from last shake
+                    # which is sign inverted from current val since shake detection is based on
+                    # max val divided by current val. if result negative => shake
+                    # if the max val is positive -> meaning we moved based on mpu view, to the positive axis
+                    # -> a shake would then reverse the direction, leading to a vibration on the revering point, which is positive axis
+                    if self.shake.values[axis][3] > 0:
+                        if axis == 0:
+                            # vibrate on positive X axis
+                            self.vib.vibrate(3)
+                        if axis == 1:
+                            pass
+                        if axis == 2:
+                            # vibrate on positive Z axis
+                            self.vib.vibrate(0)
+
+                    if self.shake.values[axis][3] < 0:
+                        if axis == 0:
+                            self.vib.vibrate(2)
+                        if axis == 1:
+                            pass
+                        if axis == 2:
+                            self.vib.vibrate(1)
                     #! send udp package
                     sleep(0.08)
             
