@@ -12,6 +12,7 @@ from micropython import const
 # 12 turn end
 # 13 calculate result
 # 14 game end
+# 16 shake end
 # 1 hit score
 # 2 hit score
 # 3 hit score

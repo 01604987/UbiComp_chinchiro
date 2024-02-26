@@ -100,7 +100,8 @@ class Logic:
                     #self.s_m.set_game_state("shaking")
                     if self.my_turn:
                         self._shaking()
-
+                        self.network.send_tcp_data(16)
+                    # will never reach if not networked
                     if not self.my_turn:
 ########################################################################################################################################################
                         last_t = ticks_ms()
@@ -115,15 +116,19 @@ class Logic:
                                 # do led
                                 # do vibration
                                 # do audio
-
+                                sleep(0.08)
                             # after 3 sec of no data -> check tcp
                             if ticks_ms() - last_t >= 3000:
                                 print("checking tcp")
                                 last_t = ticks_ms()
                                 end = self.network.receive_tcp_data()
-                                if end:
-                                    print(end)
+                                print(end)
+                                if end == 16:
+                                    # send ack
+                                    self.network.send_tcp_data(11)
                                     break
+                                elif end == 14:
+                                    raise EndGame
 
                         # check udp, check tcp in loop
                         # if got tcp message break out of loop/ return from loop
@@ -448,11 +453,15 @@ class Logic:
             self.score.roll_dice(3)
             
             self.led.numbers(self.score.my_nums)
+            # play audio
+
+            if self.network_active:
+                self.wait_for_ack()
 
             # check if numbers clears table
             self.score.check_score(0)
             
-            sleep(3)
+            
 
             # if multiplayer
             if self.network_active:
@@ -461,6 +470,8 @@ class Logic:
                 self.wait_for_ack()           
 
             print('My dice: ', self.score.my_nums)
+
+            sleep(4)
         
         else:
             # check for op_nums
@@ -477,7 +488,7 @@ class Logic:
             self.led.numbers(self.score.op_nums)
             # send ack of package
             self.network.send_tcp_data(11)
-            sleep(3)
+            sleep(4)
             
 
     def _calculate_winner(self):
