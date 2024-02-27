@@ -2,7 +2,7 @@
 This repository contains micropython code for a Ubiquitous Computing project using the esp8266.
 
 A workflow documentation as well as parts list and idea protype can be found in this [miro board](https://miro.com/app/board/uXjVNw7E-uI=/?share_link_id=554810757735).
-
+ 
 
 # Modules
 ## ESP8266
