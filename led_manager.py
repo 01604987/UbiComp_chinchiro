@@ -7,6 +7,8 @@ from machine import Timer
 _LIGHTS = const(((3,0,0), (0,3,0), (0,0,3), (2,2,0), (2,0,2), (0,2,2)))
 _NUMS = [[], [3], [0, 6], [2, 3, 4], [0, 2, 4, 6], [0, 2, 3, 4, 6], [0, 1, 2, 4, 5, 6]]
 _LOADING = const((15, 17, 19, 5, 3, 1))
+_DOWN = [[9, 13],[8,12],[7, 11],[14,18,6,2],[15,19,5,1],[16,20,4,0]]
+
 
 class Led:
 
@@ -49,15 +51,41 @@ class Led:
         self.np.write()
 
 
+    def display_down_up(self, dir, t):
+        if self.step == len(_DOWN):
+            self.reset()
+            self.step = 0
+            return
 
-    def start_loading(self, interval_ms = 1000):
+        if dir:
+            adjusted_step = len(_DOWN) - self.step - 1
+        else:
+            adjusted_step = self.step
+
+        adjusted_step = adjusted_step % (len(_DOWN) + 1)
+        for val in _DOWN[adjusted_step]:
+            self.np[val] = _LIGHTS[4]
+
+        self.np.write()
+
+        self.step += 1
+
+    def start_loading(self, interval_ms = 1000, option = None):
         self.stop_timer()
         if not self.timer:
             self.reset()
             self.timer = Timer(-1)
-            self.timer.init(period=interval_ms, mode=Timer.PERIODIC, callback=self.display_loading)
-            
+
+            if not option:
+                self.timer.init(period=interval_ms, mode=Timer.PERIODIC, callback=self.display_loading)
+            elif option == 1:
+                self.timer.init(period=interval_ms, mode=Timer.PERIODIC, callback = lambda t: self.display_down_up(0, t))
+            elif option == 2: 
+                self.timer.init(period=interval_ms, mode=Timer.PERIODIC, callback = lambda t: self.display_down_up(1, t))
+
+
         
+            
     def stop_timer(self):
         if self.timer:
             self.timer.deinit()

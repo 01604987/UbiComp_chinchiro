@@ -230,12 +230,10 @@ class Logic:
     def _establish_start(self):
         while True:
             self.score.reset_score()
-            #self.score.roll_dice(1)
-            self.score.my_nums.append(1)
+            self.score.roll_dice(1)
             # show my num on led left in blue
             print(f"my rolled num: {self.score.my_nums[0]}")
             self.network.send_tcp_data(self.score.my_nums[0])
-            #print("data sent")
             while not (op_num := self.network.receive_tcp_data()):
                 self._poll_btns()
                 print("await response")
@@ -261,7 +259,7 @@ class Logic:
     #! maybe merge with initialize
     def _init_game(self, g_mode):
         # setup distance sensor
-        self.btns.set_btn_irq(1, self.btns._distance_sim)
+        self.btns.set_btn_irq(1, None)
         self.btns.set_btn_irq(0, self.btns._end_game_ADC)
 
 
@@ -296,7 +294,7 @@ class Logic:
         while True:
             self._poll_btns()
             sleep(0.1)
-            if self.btns.is_static:
+            if self.distance.static():
                 print('ready for pickup')
                 break
 
@@ -309,7 +307,7 @@ class Logic:
             sleep(0.1)
 
             # if sensor measure > interval
-            if not self.btns.is_static:
+            if self.distance.pick_up():
                 # stop any blinking leds, timers or sound effect that are designed only for initial
                 print('ready for shaking')
                 break
@@ -335,7 +333,7 @@ class Logic:
             
             if axis == None:
                 # TODO add button to for simulating distance sensor
-                if self.btns.is_static and shake_counter != 0:
+                if self.distance.static() and shake_counter != 0:
                     print("Ending shaking")
                     #! play dice done shaking sound
                     break

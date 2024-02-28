@@ -20,9 +20,9 @@ max_set = 0
 def acc(accel, values):
     raw = accel.get_values()
     axis = [0,0,0]
-    axis[0] = raw['AcX']
-    axis[1] = raw['AcY']
-    axis[2] = raw['AcZ'] - 19000
+    axis[0] = raw[0]
+    axis[1] = raw[1]
+    axis[2] = raw[2] - 19000
     
     
     

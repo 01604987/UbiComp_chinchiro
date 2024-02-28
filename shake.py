@@ -47,7 +47,8 @@ class Shake:
         # # because gravity pulls down the z axis
         # accel[2] = raw['AcZ'] - 19000
 
-        accel[2] = accel[2] - 19000
+        #accel[2] = accel[2] - 19000
+        accel[2] = accel[2] - 10000
 
         for index, val in enumerate(self.values):
             # copy current value to last value

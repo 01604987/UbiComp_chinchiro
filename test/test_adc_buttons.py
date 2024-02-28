@@ -68,7 +68,7 @@ def reset_db_t() -> None:
 
 while True:
     val = buttons.read()
-    #print(val)
+    print(val)
     
     
     

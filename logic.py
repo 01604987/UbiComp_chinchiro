@@ -1,11 +1,10 @@
-# from led_manager import LIGHTS, Led
+# from led_manager import Led
 # from audio import Audio
 # from buttons_adc import Buttons_ADC
 # from shake import Shake
 # from distance import Distance
 # from connection import Connection
 # from net import Server
-# from micropython import const, mem_info
 from score import Score
 from vibration import Vibration
 from time import sleep, ticks_ms
@@ -33,10 +32,9 @@ class Logic:
         self.vib = Vibration()
         self.my_turn = 0
 
-    # def __init__(self, btns:Buttons_ADC, s_m:State, led:Led , audio: Audio ,network: Server = None, shake: Shake = None, distance: Distance = None, vibration = None, conn:Connection = None) -> None:
+    # def __init__(self, btns:Buttons_ADC, led:Led , audio: Audio ,network: Server = None, shake: Shake = None, distance: Distance = None, vibration = None, conn:Connection = None) -> None:
     #     self.btns = btns
     #     # state_manager
-    #     self.s_m = s_m
     #     self.network = network
     #     self.network_active = False
     #     # reset or game ended trigger
@@ -77,9 +75,11 @@ class Logic:
             sleep(0.01)
             self.btns.poll_adc()
             # check button menu selection
+            self.led.numbers([0, self.btns.get_r_pressed(2) + 1, 0])
             if self.btns.get_l_pressed():
                 #self.s_m.set_menu_state(self.btns.get_r_pressed(len(MENU_S)))
                 #break
+                self.led.reset()
                 return self.btns.get_r_pressed(2)
 
 
@@ -207,10 +207,18 @@ class Logic:
         except Exception as err:
             print(str(err))
             raise
-        
-        while not self.network.accept_conn():
+        if hasattr(self.network, 'server_tcp'):
+            while not self.network.accept_conn():
+                self._poll_btns()
+                print('awaiting incomming connection')
+                # do led loading etc..
+                # allow end game/break
+                sleep(1)
+        else:
+                    self.network.connect_tcp()
+        while not (res := self.network.establish_tcp()):
             self._poll_btns()
-            print('awaiting incomming connection')
+            print('awaiting established connection')
             # do led loading etc..
             # allow end game/break
             sleep(1)
@@ -234,7 +242,6 @@ class Logic:
             # show my num on led left in blue
             print(f"my rolled num: {self.score.my_nums[0]}")
             self.network.send_tcp_data(self.score.my_nums[0])
-            print("data sent")
             while not (op_num := self.network.receive_tcp_data()):
                 self._poll_btns()
                 print("await response")
@@ -260,6 +267,7 @@ class Logic:
     #! maybe merge with initialize
     def _init_game(self, g_mode):
         # setup distance sensor
+        # cycle color
         self.btns.set_btn_irq(1, None)
         self.btns.set_btn_irq(0, self.btns._end_game_ADC)
 
@@ -287,22 +295,26 @@ class Logic:
         #     self.network_active = True
        
 
-        self.audio.volume(20)
+        self.audio.volume(15)
         
 
     def _initiate(self):
         # setup timer to periodically blink stuff
+        self.led.start_loading(interval_ms = 500, option = 1)
+
         while True:
             self._poll_btns()
             sleep(0.1)
             if self.distance.static():
+                self.led.stop_timer()
                 print('ready for pickup')
                 break
 
             #! LED indicating setting down device
-
+        self.led.numbers([0, 1, 0], 1)
         sleep(1)
 
+        self.led.start_loading(interval_ms = 500, option = 2)
         while True:
             self._poll_btns()
             sleep(0.1)
@@ -311,7 +323,10 @@ class Logic:
             if self.distance.pick_up():
                 # stop any blinking leds, timers or sound effect that are designed only for initial
                 print('ready for shaking')
+                self.led.stop_timer()
+
                 break
+        self.led.numbers([0, 1, 0], 1)
         sleep(1)
         
     def _shaking(self):

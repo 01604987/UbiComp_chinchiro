@@ -1,7 +1,7 @@
 from lib.hcsr04 import HCSR04
 from micropython import const
 
-_THRESH = const(30)
+_THRESH = const(28)
 
 class Distance:
 
@@ -15,5 +15,5 @@ class Distance:
         return self.sensor.distance_mm() <= _THRESH
     
     def pick_up(self):
-        return self.sensor.distance_mm() >= _THRESH * 2
+        return self.sensor.distance_mm() >= _THRESH * 1.5
     
