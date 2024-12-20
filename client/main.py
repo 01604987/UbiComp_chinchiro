@@ -17,8 +17,8 @@ print("Hello World")
 _IP_SERVER = const('192.168.1.10')
 _IP_CLIENT = const('192.168.1.11')
 _PORT = const(5002)
-_SSID = 'TP-Link_2.4Ghz'
-_PASSWORD = 'jkv777kim'
+_SSID = '' #insert ssid
+_PASSWORD = '' #insert password
 
 #! move comments to some other doc to safe on mem/storage ?
 ###### BUTTONS ######
